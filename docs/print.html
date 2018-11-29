@@ -655,8 +655,16 @@ enum DurationPart {
 </style>
 <a class="header" href="#pest" id="pest"><h1>Pest</h1></a>
 <a class="header" href="#overview-1" id="overview-1"><h2>Overview</h2></a>
+<div class="article-content">
+<p><code>pest</code> is a completely different approach from the other two options discussed here. Instead of building your own parser, you write out your grammar, in their format, and <code>pest</code> does all the building for you. For this we are going to replicate the <a href="../04.baseline/bnf.html">BNF grammar</a> from before</p>
+</div>
+<div class="presentation-only"></div>
 <a class="header" href="#positives-1" id="positives-1"><h2>Positives</h2></a>
+<div class="article-content"></div>
+<div class="presentation-only"></div>
 <a class="header" href="#negatives-1" id="negatives-1"><h2>Negatives</h2></a>
+<div class="article-content"></div>
+<div class="presentation-only"></div>
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
 </style>
 <pre><pre class="playpen"><code class="language-rust">
@@ -753,6 +761,28 @@ mod test {
     }
 }
 #}</code></pre></pre>
+<script>
+(function() {
+    var pp = getPlaypen();
+    var mode = localStorage.getItem('presentation_mode');
+    if (!pp) return;
+    pp.classList.add('article-content');
+    if (mode == 1) {
+        pp.classList.add('not-presenting');
+    } else if (mode == 0) {
+        pp.classList.add('presenting');
+    }
+
+    function getPlaypen() {
+        var cls = '.playpen';
+        var pre = document.querySelectorAll(cls);
+        if (!pre || pre.length < 1) return console.error('failed to find', cls);
+        pre = pre[pre.length - 1];
+        if (!pre || !pre.parentElement) return console.error('unknown structure of', cls);
+        return pre.parentElement;
+    }
+})()
+</script>
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
 </style>
 <a class="header" href="#combine" id="combine"><h1>Combine</h1></a>
@@ -1020,6 +1050,28 @@ mod test {
     }
 }
 #}</code></pre></pre>
+<script>
+(function() {
+    var pp = getPlaypen();
+    var mode = localStorage.getItem('presentation_mode');
+    if (!pp) return;
+    pp.classList.add('article-content');
+    if (mode == 1) {
+        pp.classList.add('not-presenting');
+    } else if (mode == 0) {
+        pp.classList.add('presenting');
+    }
+
+    function getPlaypen() {
+        var cls = '.playpen';
+        var pre = document.querySelectorAll(cls);
+        if (!pre || pre.length < 1) return console.error('failed to find', cls);
+        pre = pre[pre.length - 1];
+        if (!pre || !pre.parentElement) return console.error('unknown structure of', cls);
+        return pre.parentElement;
+    }
+})()
+</script>
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
 </style>
 <table><thead><tr><th> crate       </th><th> build time </th><th> build size </th><th> bench                     </th></tr></thead><tbody>
@@ -1050,6 +1102,21 @@ mod test {
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         
