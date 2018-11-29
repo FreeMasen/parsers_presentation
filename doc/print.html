@@ -1,0 +1,1083 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Evaluating Parser Options</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li class="affix"><a href="01.welcome/welcome.html">Welcome</a></li><li><a href="02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="04.baseline/iso_duration.html"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="05.nom/parser.html"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="06.pest/intro.html"><strong aria-hidden="true">7.</strong> Pest</a></li><li><ol class="section"><li><a href="06.pest/src.html"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="07.combine/intro.html"><strong aria-hidden="true">8.</strong> Combine</a></li><li><ol class="section"><li><a href="07.combine/src.html"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Evaluating Parser Options</h1> 
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<style>
+    #page-wrapper {
+        text-align: center;
+    }
+</style>
+<a class="header" href="#choosing-a-parser-in-rust" id="choosing-a-parser-in-rust"><h1>Choosing a parser in Rust</h1></a>
+<a class="header" href="#exploring-3-popular-parser-crates" id="exploring-3-popular-parser-crates"><h2>Exploring 3 popular parser crates</h2></a>
+<a class="header" href="#robert-masen" id="robert-masen"><h1>Robert Masen</h1></a>
+<a class="header" href="#december-2018" id="december-2018"><h2>December 2018</h2></a>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#introduction" id="introduction"><h2>Introduction</h2></a>
+<div class="presentation-only">
+<a class="header" href="#why-me" id="why-me"><h3>Why me?</h3></a>
+<ul>
+<li>Rusty ECMAScript Scanner (RESS)
+<ul>
+<li>https://github.com/FreeMasen/RESS</li>
+</ul>
+</li>
+<li>Rusty ECMAScript Syntax Analyzer (RESSA)
+<ul>
+<li>https://github.com/FreeMasen/RESSA</li>
+</ul>
+</li>
+</ul>
+<a class="header" href="#where-to-find-me" id="where-to-find-me"><h3>Where to find me?</h3></a>
+<ul>
+<li>@FreeMasen
+<ul>
+<li>twitter</li>
+<li>irc</li>
+<li>discord</li>
+</ul>
+</li>
+<li>https://wiredforge.com
+<ul>
+<li>infrequent blogging</li>
+<li>random JS things</li>
+</ul>
+</li>
+<li>https://robertmasen.com
+<ul>
+<li>My resume online</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="article-content">
+<p>In early 2018, I found myself looking for a crate that would parse javascript into an AST. While there are a few options out there for parsing javascript, they are all tied to some greater development tool. What I was looking for was <code>syn</code> but for javascript. Since this didn't exist, I thought it would be a good idea to build it.</p>
+</div>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#what-well-cover" id="what-well-cover"><h1>What We'll Cover</h1></a>
+<div class="presentation-only">
+<ul>
+<li><code>nom</code>
+<ul>
+<li>Macro based</li>
+</ul>
+</li>
+<li><code>pest</code>
+<ul>
+<li>External Grammar Files</li>
+</ul>
+</li>
+<li><code>combine</code>
+<ul>
+<li><code>impl Trait</code> based</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="article-content">
+<p>First, I wanted to leverage the tools that already existed to make my life a little easier. I searched for a lower level byte parsing library, and found 3 options that I wanted to investigate.</p>
+<p>The three crates were <code>nom</code>, <code>pest</code>, and <code>combine</code>.
+Three popular options that take different approaches.
+<code>nom</code>'s approach is to use macros to define parsing pipelines called combinators.
+<code>combine</code> also leverages combinators but instead of using macros, it uses regular rust functions.
+<code>pest</code> is a PEG parser generator, meaning it utilizes an external grammar file to generate a parser struct for you.</p>
+</div>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#our-format" id="our-format"><h1>Our Format</h1></a>
+<div class="article-content">
+<p>As we investigate these options, we should probably have a format that we want to parse so each
+example will cover the same problems.</p>
+<p>One format that I think is simple enough to be digestible while being complicated enough to be interesting is the ISO 8601 Duration format. The ISO 8601 is the date/time specification that aids in making dates work across cultures, sometimes referred to as I18n.</p>
+<blockquote>
+<p>As an aside, I18n is an abbreviation for Internationalization, it is used because there are 18 letters between the I and the last n</p>
+</blockquote>
+<p>The duration format is dynamic, yet simple. Each duration will start with the character <code>P</code>, followed by at least one value and unit of time. The value of time can be an integer or decimal value, the unit is a single capital letter. The units are broken into two sections separated by a <code>T</code>. The first section includes <code>Y</code>ear, <code>M</code>onth, <code>W</code>eek, and <code>D</code>ay and the second section include <code>H</code>our, <code>M</code>inute, and <code>S</code>econd.</p>
+</div>
+<div class="presentation-only">
+<a class="header" href="#iso-8601-durations" id="iso-8601-durations"><h2>ISO 8601 Durations</h2></a>
+<ul>
+<li>A standard way to encode a length of time into a string</li>
+<li>I18n?</li>
+</ul>
+<a class="header" href="#basic-description" id="basic-description"><h3>Basic Description</h3></a>
+<ul>
+<li>Start with a capital letter <code>P</code></li>
+<li>At least one &quot;Duration Unit&quot;</li>
+<li>Duration Unit = decimal number + letter
+<ul>
+<li>Unspecified length</li>
+</ul>
+</li>
+<li>Duration Units
+<ul>
+<li>Years   (<code>Y</code>)</li>
+<li>Months  (<code>M</code>)</li>
+<li>Weeks   (<code>W</code>)</li>
+<li>Days    (<code>D</code>)</li>
+<li>Hours   (<code>H</code>)</li>
+<li>Minutes (<code>M</code>)</li>
+<li>Seconds (<code>S</code>)</li>
+</ul>
+</li>
+<li>Must be in that order</li>
+<li>Each is optional, minimum of 1 is required</li>
+<li>If at least one unit that comes after Days is present they must be preceded by <code>T</code></li>
+</ul>
+<a class="header" href="#examples" id="examples"><h3>Examples</h3></a>
+</div>
+<div class="article-content">
+<p>Here are some examples of different lengths of times as ISO 8601 Durations.</p>
+</div>
+<ul>
+<li>One Day
+<ul>
+<li><code>P1D</code></li>
+<li><code>PT24H</code></li>
+<li><code>P0.14285W</code></li>
+</ul>
+</li>
+<li>One Hour
+<ul>
+<li><code>PT1H</code></li>
+<li><code>P0.041666D</code></li>
+</ul>
+</li>
+<li>One of Everything
+<ul>
+<li><code>P1Y1M1W1DT1H1M1.1S</code></li>
+</ul>
+</li>
+</ul>
+<div class="article-content">
+<p>With any data format, there are a few things here that could be problematic in a real world scenario. First, the size of each value is unspecified meaning deserializing a duration with two great of value could lead to overflow. Second, the larger of the units don't always have a consistent or clear meaning, a good example of this would the <code>M</code>onth unit, Using the gregorian calendar a month could be anywhere from 28 to 31 days. I bring this up because theses are important things to think about when approaching deserialization or parsing process.</p>
+</div>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#bnf-grammar" id="bnf-grammar"><h1>BNF Grammar</h1></a>
+<div class="article-content">
+<p>Another thing that will prove useful if you are interested in getting started with parsing
+is to understand that there are languages out there for talking about languages. The overall structure
+of any format is called a grammar, when explaining the structure of a format it is helpful to have
+method to communicate it. One option is to use the Backus-Naur Form (BNF), if you scroll down you will find the ISO 8601 Duration specification written in the BNF.</p>
+<p>For those unfamiliar with grammar forms, they consist of a series of rules, the left side of a rule is a name, the right side is a description of what that rule means, they are separated by <code>::=</code> in BNF.</p>
+<p>I find it easiest to read a grammar from the bottom up. Using the example below we have the <code>digit</code> rule, on the right side of this rule we see each number from 0 to 9 separated by a <code>|</code>, which here means <em>or</em>, so a digit is a single digit number from 0 through 9. Next we have the <code>integer</code> rule, this is either an <code>integer</code> followed by a <code>digit</code> or &quot;&quot;. This is where things can get a little confusing, To illustrate that something has a possibly, infinite length, grammars typically use this kind of notation.</p>
+<p>To me, this style of notation feels backwards, lets use the example <code>999</code>. If you think about it starting with the right most <code>9</code>, you would assign that position <code>&lt;integer&gt;&lt;digit&gt;</code>, the <code>&lt;integer&gt;</code> here would point to the middle <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code> and again the first <code>&lt;integer&gt;</code> would represent the left most <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code>, but the first <code>&lt;integer&gt;</code> in this case would be assigned <code>&quot;&quot;</code>. Here is a little flow chart to hopefully help visualize what I am trying to say.</p>
+<pre><code class="language-xml">&lt;integer&gt; = &quot;&quot;
+    ┗━━━━━━┓
+&lt;integer&gt; = &lt;integer&gt;9
+    ┗━━━━━━┓
+&lt;integer&gt; = &lt;integer&gt;9
+    ┗━━━━━━┓
+&lt;integer&gt; = &lt;integer&gt;9
+</code></pre>
+<p>When the right side of a rule looks like this it is referred to as a &quot;recursive&quot; rule. Moving up the grammar, next we have the <code>remainder</code> rule, this is either a <code>.</code> followed by an <code>integer</code> or nothing. Next up we have <code>number</code> which either an <code>integer</code> or a <code>remainder</code> or an <code>integer</code> followed by a <code>remainder</code>.</p>
+<p>The next few rules are our units, you will notice that there are two rules for each unit this is because need to have two versions, one non-optional and one optional. Each of the rules is a <code>number</code> followed by the specific unit's character, the optional version is just the normal version or nothing.</p>
+<p>After our units we have the two halves of our duration, the <code>time-length</code> and the <code>date-length</code>, notice that we again have the optional version of each. These rules are almost identical in structure, the only difference is the units that are included. Using the <code>date-length</code> as an example, we have 4 options in each option one of the units is not optional. so a date-length is one of the following</p>
+<ul>
+<li>first
+<ul>
+<li>optional year</li>
+<li>optional month</li>
+<li>optional week</li>
+<li>day</li>
+</ul>
+</li>
+<li>second
+<ul>
+<li>optional year</li>
+<li>optional month</li>
+<li>week</li>
+<li>optional day</li>
+</ul>
+</li>
+<li>third
+<ul>
+<li>optional year</li>
+<li>month</li>
+<li>optional week</li>
+<li>optional day</li>
+</ul>
+</li>
+<li>fourth
+<ul>
+<li>year</li>
+<li>optional month</li>
+<li>optional week</li>
+<li>optional day
+This is because one unit is always required for a date-length. The same applies to the <code>time-length</code> rule, the only difference is that the <code>time-length</code> starts with a <code>T</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Finally we have the <code>duration</code> rule, this is the letter <code>P</code> followed by either an optional <code>date-length</code> and a <code>time-length</code> or a <code>date-length</code> followed by an optional <code>time-length</code>, again both items are optional but at least one must be included.</p>
+<p>With that out of the way, let's dig into each of our options a little more.</p>
+</div>
+<pre><code class="language-xml">&lt;duration&gt;              ::= P &lt;date-length-opt&gt;&lt;time-length&gt; |
+                            P &lt;date-length&gt;&lt;time-length-opt&gt;
+&lt;date-length-opt&gt;       ::= &lt;date-length&gt; | &quot;&quot;
+&lt;date-length&gt;           ::= &lt;years-opt&gt;&lt;months-or-minutes-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
+                            &lt;years-opt&gt;&lt;months-or-minutes-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
+                            &lt;years-opt&gt;&lt;months-or-minutes&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
+                            &lt;years&gt;&lt;months-or-minutes-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
+&lt;time-length-opt&gt;       ::= &lt;time-length&gt; | &quot;&quot;
+&lt;time-length&gt;           ::= T&lt;hours-opt&gt;&lt;months-or-minutes-opt&gt;&lt;seconds&gt; |
+                            T&lt;hours-opt&gt;&lt;months-or-minutes&gt;&lt;seconds-opt&gt; |
+                            T&lt;hours&gt;&lt;months-or-minutes-opt&gt;&lt;seconds-opt&gt;
+&lt;years-opt&gt;             ::= &lt;years&gt; | &quot;&quot;
+&lt;years&gt;                 ::= &lt;number&gt;Y
+&lt;months-or-minutes-opt&gt; ::= &lt;months-or-minutes&gt; | &quot;&quot;
+&lt;months-or-minutes&gt;     ::= &lt;number&gt;M
+&lt;weeks-opt&gt;             ::= &lt;weeks&gt; | &quot;&quot;
+&lt;weeks&gt;                 ::= &lt;number&gt;W
+&lt;days-opt&gt;              ::= &lt;days&gt; | &quot;&quot;
+&lt;days&gt;                  ::= &lt;number&gt;D
+&lt;hours-opt&gt;             ::= &lt;hours&gt; | &quot;&quot;
+&lt;hours&gt;                 ::= &lt;number&gt;H
+&lt;seconds-opt&gt;           ::= &lt;seconds&gt; | &quot;&quot;
+&lt;seconds&gt;               ::= &lt;number&gt;S
+&lt;number&gt;                ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
+&lt;remainder&gt;             ::= .&lt;integer&gt; | &quot;&quot;
+&lt;integer&gt;               ::= &lt;integer&gt;&lt;digit&gt; | &quot;&quot;
+&lt;digit&gt;               ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+</code></pre>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#common-code-items" id="common-code-items"><h1>Common Code Items</h1></a>
+<div class="article-content">
+<p>Before we dig into each implementation, I want to cover a few things that are common
+to most of the examples. The first thing they share is the following enum.</p>
+</div>
+<div class="presentation-only">
+<ul>
+<li>Duration part</li>
+<li>One for each unit</li>
+</ul>
+</div>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+enum DurationPart {
+    Years(f32),
+    Months(f32),
+    Weeks(f32),
+    Days(f32),
+    Hours(f32),
+    Minutes(f32),
+    Seconds(f32),
+}
+#}</code></pre></pre>
+<div class="article-content">
+<p>This will represent a successfully parsed number/unit pair. so <code>100Y</code> would translate to <code>DurationPart::Years(100.0)</code></p>
+<p>The next thing that pops up across multiple crates is the need to parse a string into a float.</p>
+<blockquote>
+<p>quick note:, the values are not actual floating point numbers as the spec does not allow for scientific notation (<code>1.2e-3</code>), they would be more akin to the decimal data type provided in some languages.</p>
+</blockquote>
+<p>For this we are going to lean on the implementation in the standard library so it will typically just look like this.</p>
+</div>
+<div class="presentation-only">
+<ul>
+<li>Convert <code>&amp;str</code> to <code>f32</code></li>
+<li>Using <code>std::str::parse</code></li>
+<li>Returns a result</li>
+</ul>
+</div>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let value_str = &quot;1.222&quot;;
+let value: f32 = value_str.parse();
+#}</code></pre></pre>
+<div class="article-content">
+<p>Here the <code>parse</code> method on <code>&amp;str</code> returns a result, so we would need to deal with that as well.</p>
+</div>
+<div class="article-content">
+<p>The last thing to cover here is that each parser will need to deal with the fact that <code>M</code> can mean either month or minute. While there isn't a shared code solution for this, it does pop up a few times.</p>
+</div>
+<div class="presentation-only">
+<ul>
+<li>Month or Minute</li>
+</ul>
+</div>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#nom" id="nom"><h1>nom</h1></a>
+<a class="header" href="#overview" id="overview"><h2>Overview</h2></a>
+<div class="article-content">
+<p>By far the most popular option, <code>nom</code> heavily utilizes macros to build parsing workflows.
+This allows it to be performant yet flexible but significantly increases the learning curve for users.</p>
+</div>
+<div class="presentation-only">
+<ul>
+<li>Most popular</li>
+<li>Performant</li>
+<li>Flexible</li>
+<li>High learning curve</li>
+</ul>
+</div>
+<a class="header" href="#positives" id="positives"><h2>Positives</h2></a>
+<div class="article-content">
+<p><code>nom</code> has really set the bar high for the performance of any parsing library. Once you have a working parser, you can feel pretty confident that it will be just about as fast as you can make it. It's popularity makes it the most battle tested option.</p>
+</div>
+<div class="presentation-only">
+<ul>
+<li>Performance</li>
+<li>Battle Tested</li>
+</ul>
+</div>
+<a class="header" href="#negatives" id="negatives"><h2>Negatives</h2></a>
+<div class="article-content">
+<p>Working with <code>nom</code> lead me to a headache's worth of frustration. While it is well documented, it can be difficult to know where to look when getting started. When putting together the code samples for this, I spent the better part of a day and a half trying to implement the <code>nom</code> version, at that point I put that version aside to come back to it later. The inclusion of new operators, the requirement of using nested macros and the stream focus of the project were all big ergonomic barriers for me. At one point I had a working version of that parser that kept failing because the input I was providing wasn't wrapped up as a <code>CompleteStr</code>, a type defined by <code>nom</code> that indicates all input has been received. I needed to reach out to someone in the <code>nom</code> gitter channel to know that was my problem. The feature of being stream focused I think is a plus overall for <code>nom</code> as more experienced users would leverage that feature but it does make the process of learning quite confusing.</p>
+</div>
+<div class="presentation-only">
+<ul>
+<li>Learning curve
+<ul>
+<li>Custom operators</li>
+<li>Nested macro calls</li>
+<li>Stream focused</li>
+</ul>
+</li>
+</ul>
+</div>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#iso-8601-duration-parser" id="iso-8601-duration-parser"><h2>ISO 8601 Duration Parser</h2></a>
+<div class="article-content">
+<p>Below you will find my attempt at using <code>nom</code> to create a parser for our duration format.</p>
+<p>A good place to start when learning to use <code>nom</code> is the <code>named!</code> macro, this macro will create a function for you with a specific name and behavior. <code>named!</code> takes two arguments, the first is the function's name, this needs to include 2 generic arguments, the second is the function's body. This can be a little difficult to get used to but it isn't too much of a pain. The generic arguments provided with the name define the data type of the argument and return type respectively.</p>
+<p>This is already starting to feel difficult to explain, I will re-iterate one last time that the learning curve for <code>nom</code> is pretty steep.</p>
+<p>Just like with our grammar, let's start at the bottom and move up. The first <code>named!</code> entry we have in that direction is called <code>float</code>, which takes <code>CompleteStr</code> and returns <code>f32</code>. The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn float(i: CompleteStr) -&gt; Result&lt;f32, Error&gt; {
+    map_res!(take_while!(digit), parse_float)
+}
+#}</code></pre></pre>
+<p>While the above is an extreme simplification, I hope it illustrates what is going on when we use the <code>named!</code> macro.</p>
+<p>To dig into the function body a little, we are using two macros provided by <code>nom</code>, <code>map_res!</code> which takes a parser and a <code>Fn(I) -&gt; Result&lt;T, Error&gt;</code> where <code>I</code> is the input type, for us that would be <code>CompleteStr</code> and <code>T</code> is the return type which for this would be <code>f32</code>. The first argument we are using <code>take_while1!</code>, this is another <code>nom</code> macro the only argument it takes is a <code>Fn(B) -&gt; bool</code>, where <code>B</code> is the smallest part of the input, in our case that would be <code>char</code> since <code>CompleteStr</code> is a collection of <code>char</code>s. What this is going to do look at each <code>char</code> in the input and pass that to our test function, which checks to see if it is <code>0-9</code> or <code>.</code>, if it is one of those the <code>char</code> is added to the output, if not it stops and returns all of the <code>char</code>s it found as a <code>CompleteStr</code>. The last thing to note about this is that <code>take_whle1!</code> requires at least the first character it tries to be successful otherwise it fails. If we had the string <code>111.111D</code>, <code>take_while1!</code> would pull the first 7 characters ('111.111') off the front and return that.</p>
+<p>When we combine these two parts, <code>float</code> is going to pull 1 or more characters off the front of our input and then attempt to convert that into an <code>f32</code>, this will give us the value part of our <code>DurationUnit</code>.</p>
+<p>Moving up to the next <code>named!</code> we have <code>duration_part</code>, this takes a <code>CompleteStr</code> and returns a <code>(f32, CompleteStr)</code>. Looking at the body of <code>duration_part</code> we have another new <code>nom</code> macro <code>do_parse!</code>. This is a very powerful tool in the <code>nom</code> tool shed, <code>do_parse!</code> will take any number of parsers and apply them in sequence. We indicate the flow of the parsers using the <code>&gt;&gt;</code> operator, we can assign the result of any parse to a variable by putting that variable name and a colon before it. <code>do_parse!</code> requires the final item in your flow to be a tuple with the expected values. For the <code>duration_part</code> body, we first use the <code>float</code> parser, that will take all of the leading numbers off the front and convert them into an <code>f32</code> like we went over before. notice you are not calling <code>float()</code>, I'll get to that in just a moment. we are going to assign that <code>f32</code> to the variable <code>value</code>, once that is done we take the rest of our input and pass it to <code>nom</code>'s macro <code>take!</code>, which takes 1 argument of a <code>usize</code>. Similar to <code>take_while1!</code>, <code>take!</code> pulls stuff off the front of the input in the smallest parts possible, for us again that will be <code>char</code> but instead of using a function to test if we want a character it just takes the number of characters you passed in. For us this <code>take!</code> is just going to take 1 character.</p>
+<p>At this point, you may be asking yourself &quot;why does take! need to be called but float doesn't?&quot;, that is a great question. One of the things that is hardest to get used to is that all of the <code>nom</code> macros return functions, not values. To break this down a little <code>take!</code> doesn't return the character, it returns a function that returns the character.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn take(i: CompleteStr) -&gt; Result&lt;CompleteStr, Error&gt; {
+    if i.len() &gt;= 1 {
+        Ok(&amp;i[0..1].into())
+    } else {
+        Err(...)
+    }
+}
+#}</code></pre></pre>
+<p>That means the result of <code>take!</code> can be called, just like the <code>float</code>.</p>
+<p>Moving along, we are assigning that single character string to the variable <code>flag</code>, we then end with the tuple <code>(value, flag)</code> which is of type <code>(f32, CompleteStr)</code>.</p>
+<p>So now we should be able to successfully to parse our duration's smallest parts. Now we need to figure out how to get that into our <code>DurationPart</code> enum. Then next item moving up the chain is the helper function <code>combine_duration_part</code> this is going to take in the two parts the <code>f32</code> value and the <code>flag</code> as well as a third argument to indicate if an <code>M</code> means minutes or months.</p>
+<p>We are going to use this as we are building the two halves. The function itself is relatively simple, just a <code>match</code> statement on the flag, matching the appropriate letter to the duration part.</p>
+<p>As we move up the file, we have two more <code>named!</code> macros <code>date_part</code> and <code>time_part</code>. These are almost identical, essentially they use the <code>duration_part</code> to get first two arguments of <code>combine_duration_part</code>, it then provides the appropriate value for the third.</p>
+<p>As we continue up we have a <code>named!</code> item to parse the <code>time_parts</code>, here we have another call to <code>do_parse!</code> the first item here is is a call to <code>tag!</code>, another <code>nom</code> macro. This one simply recognizes whatever string you provide to it. In our case we are matching against the <code>T</code> that would begin the time section. It then moves on to another provided macro <code>many_m_n!</code>, this one takes three arguments, the first is the minimum number of times you expect something, the second is the maximum number of times you expect something, and the third is what you expect. In our case we expect a <code>time_part</code> at least 1 time, up to 3 times. We are going to assign the result of that to the variable <code>time_parts</code>, this value will be a <code>Vec&lt;DurationPart&gt;</code>. Since the last item in <code>do_parse!</code> needs to be a tuple, we wrap <code>time_parts</code> in one.</p>
+<p>Up next is another helper function, <code>combine_duration_parts</code>, this takes in two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>, the first will represent the date part and the second will represent the time part of our duration. Again this helper is mostly straight forward, it loops over both of, sets of parts (if they exist) and adds them all up into a <code>Duration</code>.</p>
+<p>Our last <code>named!</code> is the final step for combining all of our previous work. Again we start with a <code>do_parse!</code>, this one begins with a <code>tag!</code> for the first letter <code>P</code>, we pass the rest on to another <code>nom</code> macor <code>opt!</code>, this converts a standard parser into a one that returns an <code>Option</code>, we pass the first one another <code>many_m_n!</code> that will generate a <code>Vec&lt;DurationPart&gt;</code> with a length from one to four, assigning the result to a variable <code>date_parts</code>. It then passes the remainder of the text to another <code>opt!</code>, this one around <code>time_parts</code> ad assigns the result to a variable of the same name. Now we have the two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>s that we need to pass them along to the <code>combine_duration_parts</code> helper function.</p>
+<p>With all that we have finally built a <code>nom</code> parser that would take in our duration string and return a <code>Duration</code>. You will notice in the <code>parse</code> function that we actually call the last <code>named!</code> item manually providing the argument. This will always result in a <code>Result</code>, the <code>Ok</code> case for this result is going to be a pair, the first will be the remainder of the input, the second will be a <code>Duration</code>.</p>
+</div>
+<div class="presentation-only">
+<a class="header" href="#now-for-a-demo" id="now-for-a-demo"><h3>Now for a demo!</h3></a>
+</div>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+extern crate duration;
+#[macro_use]
+extern crate nom;
+use nom::types::CompleteStr;
+use duration::Duration;
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let pair = duration(s.into()).map_err(|e| format!(&quot;{}&quot;, e))?;
+    Ok(pair.1)
+}
+
+named!(duration&lt;CompleteStr, Duration&gt;,
+    do_parse!(
+        tag!(&quot;P&quot;) &gt;&gt;
+        date_parts: opt!(many_m_n!(1, 4, date_part)) &gt;&gt;
+        time_parts: opt!(time_parts) &gt;&gt;
+        (combine_duration_parts(date_parts, time_parts))
+    )
+);
+
+fn combine_duration_parts(date_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;, time_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;) -&gt; Duration {
+    let mut duration = Duration::new();
+    for part in date_parts.unwrap_or(Vec::new()).iter().chain(time_parts.unwrap_or(Vec::new()).iter()) {
+        match part {
+            DurationPart::Years(value) =&gt; duration.set_years(*value),
+            DurationPart::Months(value) =&gt; duration.set_months(*value),
+            DurationPart::Weeks(value) =&gt; duration.set_weeks(*value),
+            DurationPart::Days(value) =&gt; duration.set_days(*value),
+            DurationPart::Hours(value) =&gt; duration.set_hours(*value),
+            DurationPart::Minutes(value) =&gt; duration.set_minutes(*value),
+            DurationPart::Seconds(value) =&gt; duration.set_seconds(*value),
+        }
+    }
+    duration
+}
+
+named!(time_parts&lt;CompleteStr, Vec&lt;DurationPart&gt;&gt;,
+    do_parse!(
+        tag!(&quot;T&quot;) &gt;&gt;
+        time_parts: many_m_n!(1, 3, time_part) &gt;&gt;
+        (time_parts)
+    )
+);
+
+named!(date_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, false))
+    )
+);
+
+
+named!(time_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, true))
+    )
+);
+
+fn combine_duration_part(value: f32, flag: CompleteStr, is_time: bool) -&gt; DurationPart {
+    match *flag {
+        &quot;Y&quot; =&gt; DurationPart::Years(value),
+        &quot;M&quot; =&gt; if is_time {
+            DurationPart::Minutes(value)
+        } else {
+            DurationPart::Months(value)
+        },
+        &quot;W&quot; =&gt; DurationPart::Weeks(value),
+        &quot;D&quot; =&gt; DurationPart::Days(value),
+        &quot;H&quot; =&gt; DurationPart::Hours(value),
+        &quot;S&quot; =&gt; DurationPart::Seconds(value),
+        _ =&gt; unreachable!()
+    }
+}
+
+named!(duration_part&lt;CompleteStr, (f32, CompleteStr)&gt;,
+    do_parse!(
+        value: float &gt;&gt;
+        flag: take!(1) &gt;&gt;
+        (value, flag)
+    )
+);
+
+
+named!(float&lt;CompleteStr, f32&gt;,
+    map_res!(take_while1!(digit), parse_float)
+);
+
+fn digit(c: char) -&gt; bool {
+    c.is_digit(10) || c == '.'
+}
+
+fn parse_float(s: CompleteStr) -&gt; Result&lt;f32, ::std::num::ParseFloatError&gt; {
+    s.parse()
+}
+
+enum DurationPart {
+    Years(f32),
+    Months(f32),
+    Weeks(f32),
+    Days(f32),
+    Hours(f32),
+    Minutes(f32),
+    Seconds(f32),
+}
+#}</code></pre></pre>
+<script>
+(function() {
+    var pp = getPlaypen();
+    var mode = localStorage.getItem('presentation_mode');
+    if (!pp) return;
+    pp.classList.add('article-content');
+    if (mode == 1) {
+        pp.classList.add('not-presenting');
+    } else if (mode == 0) {
+        pp.classList.add('presenting');
+    }
+
+    function getPlaypen() {
+        var cls = '.playpen';
+        var pre = document.querySelectorAll(cls);
+        if (!pre || pre.length < 1) return console.error('failed to find', cls);
+        pre = pre[pre.length - 1];
+        if (!pre || !pre.parentElement) return console.error('unknown structure of', cls);
+        return pre.parentElement;
+    }
+})()
+</script>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#pest" id="pest"><h1>Pest</h1></a>
+<a class="header" href="#overview-1" id="overview-1"><h2>Overview</h2></a>
+<a class="header" href="#positives-1" id="positives-1"><h2>Positives</h2></a>
+<a class="header" href="#negatives-1" id="negatives-1"><h2>Negatives</h2></a>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+extern crate duration;
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
+
+use duration::Duration;
+use pest::Parser;
+
+#[derive(Parser)]
+#[grammar = &quot;duration.pest&quot;]
+pub struct DurationParser;
+
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let duration = DurationParser::parse(Rule::Duration, s)
+                .map_err(|e| format!(&quot;{}&quot;, e))?
+                .next()
+                .unwrap();
+    let ret = assemble_parts(duration)?;
+    Ok(ret)
+}
+use pest::iterators::Pair;
+fn assemble_parts(pair: pest::iterators::Pair&lt;Rule&gt;) -&gt; Result&lt;Duration, String&gt; {
+    let mut ret = Duration::new();
+    for part in pair.into_inner() {
+        match part.as_rule() {
+            Rule::date_section =&gt; {
+                assemble_part(&amp;mut ret, part, false)?;
+            },
+            Rule::time_section =&gt; {
+                assemble_part(&amp;mut ret, part, true)?;
+            },
+            _ =&gt; unreachable!()
+        }
+    }
+    Ok(ret)
+}
+
+fn assemble_part(d: &amp;mut Duration, pair: pest::iterators::Pair&lt;Rule&gt;, time: bool) -&gt; Result&lt;(), String&gt; {
+    for ref part in pair.into_inner() {
+        update_duration(d, part, time)?;
+    }
+    Ok(())
+}
+
+fn update_duration(d: &amp;mut Duration, pair: &amp;Pair&lt;Rule&gt;, time: bool) -&gt; Result&lt;(), String&gt; {
+    let f = get_float(pair)?;
+    match pair.as_rule() {
+        Rule::year =&gt; {
+            d.set_years(f);
+        },
+        Rule::minute_or_month =&gt; {
+            if time {
+                //minute
+                d.set_minutes(f);
+            } else {
+                //month
+                d.set_months(f);
+            }
+        },
+        Rule::week =&gt; {
+            d.set_weeks(f);
+        },
+        Rule::day =&gt; {
+            d.set_days(f);
+        }
+        Rule::hour =&gt; {
+            d.set_hours(f);
+        }
+        Rule::second =&gt; {
+            d.set_seconds(f);
+        },
+        _ =&gt; unreachable!()
+    }
+    Ok(())
+}
+
+fn get_float(pair: &amp;Pair&lt;Rule&gt;) -&gt; Result&lt;f32, String&gt; {
+    let s = pair.as_str();
+    let s = &amp;s[..s.len() - 1];
+    s.parse().map_err(|e| format!(&quot;error parsing float: {:?} {}&quot;, s, e))
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn one_of_each() {
+        parse(&quot;P1Y1M1W1DT1H1M1.1S&quot;).unwrap();
+    }
+}
+#}</code></pre></pre>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#combine" id="combine"><h1>Combine</h1></a>
+<a class="header" href="#overview-2" id="overview-2"><h2>Overview</h2></a>
+<a class="header" href="#positives-2" id="positives-2"><h2>Positives</h2></a>
+<a class="header" href="#negatives-2" id="negatives-2"><h2>Negatives</h2></a>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+extern crate duration;
+use duration::Duration;
+extern crate combine;
+use combine::{
+    choice,
+    char::{char, digit},
+    many1,
+    optional,
+    Parser,
+    ParseError,
+    Stream,
+};
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let d = duration().parse(s).map_err(|e| format!(&quot;{}&quot;, e))?;
+    Ok(d.0)
+}
+
+fn duration&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Duration&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        combine::parser::char::char('P'),
+        optional(date_part()),
+        optional(time_part()),
+    ).map(|(_, d, t)| {
+        let mut ret = Duration::new();
+        for part in d.unwrap_or(Vec::new()).iter().chain(t.unwrap_or(Vec::new()).iter()) {
+            match part {
+                DurationPart::Years(v) =&gt; ret.set_years(*v),
+                DurationPart::Months(v) =&gt; ret.set_months(*v),
+                DurationPart::Weeks(v) =&gt; ret.set_weeks(*v),
+                DurationPart::Days(v) =&gt; ret.set_days(*v),
+                DurationPart::Hours(v) =&gt; ret.set_hours(*v),
+                DurationPart::Minutes(v) =&gt; ret.set_minutes(*v),
+                DurationPart::Seconds(v) =&gt; ret.set_seconds(*v),
+            }
+        }
+        ret
+    })
+}
+
+fn date_part&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Vec&lt;DurationPart&gt;&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        many1(value_pair(false))
+    )
+}
+
+fn time_part&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Vec&lt;DurationPart&gt;&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        char('T'),
+        many1(value_pair(true))
+    ).map(|(_, p)| p)
+}
+
+fn value_pair&lt;I&gt;(time: bool) -&gt; impl Parser&lt;Input = I, Output = DurationPart&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        float(),
+        choice([
+            char('Y'),
+            char('M'),
+            char('W'),
+            char('D'),
+            char('H'),
+            char('S'),
+        ])).map(move |(v, c): (f32, char)| {
+            match c {
+                'Y' =&gt; DurationPart::Years(v),
+                'M' =&gt; if time {
+                    DurationPart::Minutes(v)
+                } else {
+                    DurationPart::Months(v)
+                },
+                'W' =&gt; DurationPart::Weeks(v),
+                'D' =&gt; DurationPart::Days(v),
+                'H' =&gt; DurationPart::Hours(v),
+                'S' =&gt; DurationPart::Seconds(v),
+                _ =&gt; unreachable!()
+            }
+        })
+}
+
+fn float&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = f32&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        many1(digit()),
+        optional((
+            char('.'),
+            many1::&lt;String, _&gt;(digit())
+        ))
+    ).map(|(int, rem)| {
+        let f = if let Some(rem) = rem {
+            format!(&quot;{}.{}&quot;, int, rem.1)
+        } else {
+            int
+        };
+        f.parse().unwrap()
+    })
+}
+
+enum DurationPart {
+    Years(f32),
+    Months(f32),
+    Weeks(f32),
+    Days(f32),
+    Hours(f32),
+    Minutes(f32),
+    Seconds(f32),
+}
+#}</code></pre></pre>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<a class="header" href="#diy" id="diy"><h1>DIY</h1></a>
+<a class="header" href="#overview-3" id="overview-3"><h2>Overview</h2></a>
+<p>The final option is to just do it yourself.</p>
+<a class="header" href="#positives-3" id="positives-3"><h2>Positives</h2></a>
+<a class="header" href="#negatives-3" id="negatives-3"><h2>Negatives</h2></a>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+extern crate duration;
+use duration::Duration;
+
+
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    if &amp;s[0..1] != &quot;P&quot; {
+        return Err(format!(&quot;All durations must start with a P: {:?}&quot;, s));
+    }
+    let s = &amp;s[1..];
+    let mut parts = s.split('T');
+    let mut found_one = false;
+    let mut ret = Duration::new();
+    if let Some(date_part) = parts.next() {
+        if date_part != &quot;&quot; {
+            found_one = true;
+            for part in parse_parts(date_part, false)? {
+                update_duration(&amp;mut ret, &amp;part);
+            }
+        }
+    }
+    if let Some(time_part) = parts.next() {
+        if time_part != &quot;&quot; {
+            found_one = true;
+            for part in parse_parts(time_part, true)? {
+                update_duration(&amp;mut ret, &amp;part);
+            }
+        }
+    }
+    if !found_one {
+        return Err(format!(&quot;duration contains no information: {:?}&quot;, s));
+    }
+
+    Ok(ret)
+}
+
+fn parse_parts(s: &amp;str, is_time: bool) -&gt; Result&lt;Vec&lt;DurationPart&gt;, String&gt; {
+    let idxs = s.char_indices().filter_map(|(i, c)| {
+        if c == 'Y'
+        || c == 'M'
+        || c == 'W'
+        || c == 'D'
+        || c == 'H'
+        || c == 'M'
+        || c == 'S' {
+            Some(i)
+        } else {
+            None
+        }
+    });
+    let mut ret = Vec::with_capacity(4);
+    let mut start_idx = 0;
+    for idx in idxs {
+        let float: f32 = s[start_idx..idx].parse().map_err(|e| format!(&quot;{}&quot;, e))?;
+        let tag = &amp;s[idx..idx+1];
+        let part = match tag {
+            &quot;Y&quot; =&gt; DurationPart::Years(float),
+            &quot;M&quot; =&gt; if is_time {
+                DurationPart::Minutes(float)
+            } else {
+                DurationPart::Months(float)
+            },
+            &quot;W&quot; =&gt; DurationPart::Weeks(float),
+            &quot;D&quot; =&gt; DurationPart::Days(float),
+            &quot;H&quot; =&gt; DurationPart::Hours(float),
+            &quot;S&quot; =&gt; DurationPart::Seconds(float),
+            _ =&gt; return Err(format!(&quot;Invalid unit tag pair at {} in {:?}&quot;, idx, s)),
+        };
+        ret.push(part);
+        start_idx = idx + 1;
+    }
+    Ok(ret)
+}
+
+fn update_duration(d: &amp;mut Duration, part: &amp;DurationPart) {
+    match part {
+        DurationPart::Years(v) =&gt; d.set_years(*v),
+        DurationPart::Months(v) =&gt; d.set_months(*v),
+        DurationPart::Weeks(v) =&gt; d.set_weeks(*v),
+        DurationPart::Days(v) =&gt; d.set_days(*v),
+        DurationPart::Hours(v) =&gt; d.set_hours(*v),
+        DurationPart::Minutes(v) =&gt; d.set_minutes(*v),
+        DurationPart::Seconds(v) =&gt; d.set_seconds(*v),
+    }
+}
+
+enum DurationPart {
+    Years(f32),
+    Months(f32),
+    Weeks(f32),
+    Days(f32),
+    Hours(f32),
+    Minutes(f32),
+    Seconds(f32),
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn all() {
+        let d = &quot;P1Y1M1W1DT1H1M1.1S&quot;;
+        let p = parse(d).unwrap();
+        assert_eq!(d, &amp;format!(&quot;{}&quot;, p));
+    }
+    #[test]
+    fn time_only() {
+        let d = &quot;PT1H1M1.1S&quot;;
+        let p = parse(d).unwrap();
+        assert_eq!(d, &amp;format!(&quot;{}&quot;, p));
+    }
+    #[test]
+    fn date_only() {
+        let d = &quot;P1Y1M1W1D&quot;;
+        let p = parse(d).unwrap();
+        assert_eq!(d, &amp;format!(&quot;{}&quot;, p));
+    }
+}
+#}</code></pre></pre>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+</style>
+<table><thead><tr><th> crate       </th><th> build time </th><th> build size </th><th> bench                     </th></tr></thead><tbody>
+<tr><td> nom         </td><td> 9.67s      </td><td> 202kb      </td><td> 3,279 ns/iter (+/- 3,321) </td></tr>
+<tr><td> combine     </td><td> 26.96s     </td><td> 303kb      </td><td> 4,172 ns/iter (+/- 944)   </td></tr>
+<tr><td> pest        </td><td> 1m 13s     </td><td> 417kb      </td><td> 4,556 ns/iter (+/- 3,461) </td></tr>
+<tr><td> hand rolled </td><td> 3.60s      </td><td> 125kb      </td><td> 2,099 ns/iter (+/- 121)   </td></tr>
+</tbody></table>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>
