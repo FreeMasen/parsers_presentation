@@ -4,7 +4,7 @@ multilingual = false
 src = "src"
 title = "Evaluating Parser Options"
 [build]
-build-dir = "doc"
+build-dir = "docs"
 [output.html]
 theme = "src/theme"
 
