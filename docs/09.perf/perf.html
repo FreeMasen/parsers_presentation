@@ -136,15 +136,77 @@
 
                 <div id="content" class="content">
                     <main>
-                        <style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+                        <style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
-<table><thead><tr><th> crate       </th><th> build time </th><th> build size </th><th> bench                     </th></tr></thead><tbody>
-<tr><td> nom         </td><td> 9.67s      </td><td> 202kb      </td><td> 3,279 ns/iter (+/- 3,321) </td></tr>
-<tr><td> combine     </td><td> 26.96s     </td><td> 303kb      </td><td> 4,172 ns/iter (+/- 944)   </td></tr>
-<tr><td> pest        </td><td> 1m 13s     </td><td> 417kb      </td><td> 4,556 ns/iter (+/- 3,461) </td></tr>
-<tr><td> hand rolled </td><td> 3.60s      </td><td> 125kb      </td><td> 2,099 ns/iter (+/- 121)   </td></tr>
+<!--web-only-->
+<p>Below you will find a table of benchmark information for each of the 4
+implementations. There are two benchmarks for each implementation, the first is parsing just 1 duration, the second is parsing 1000 durations. For the <a href="#build-time">build time</a> and <a href="#build-size">build size</a> benchmarks, I used the following binary application with feature flags to conditionally use each of the implementations.</p>
+<pre><pre class="playpen"><code class="language-rust">extern crate duration;
+extern crate random_durations;
+#[cfg(all(feature = &quot;nom&quot;, not(feature = &quot;bench&quot;)))]
+extern crate nom_duration_parser as parser;
+#[cfg(all(feature = &quot;combine&quot;, not(feature = &quot;bench&quot;)))]
+extern crate combine_duration_parser as parser;
+#[cfg(all(feature = &quot;pest&quot;, not(feature = &quot;bench&quot;)))]
+extern crate pest_duration_parser as parser;
+#[cfg(all(feature = &quot;hand&quot;, not(feature = &quot;bench&quot;)))]
+extern crate hand_rolled_duration_parser as parser;
+
+#[cfg(any(feature = &quot;bench&quot;, not(any(feature = &quot;nom&quot;, feature = &quot;combine&quot;, feature = &quot;pest&quot;, feature = &quot;hand&quot;))))]
+fn main() {
+    println!(&quot;{}&quot;, random_durations::gen_random_durs_text(get_count()).join(&quot;\n&quot;));
+}
+
+#[cfg(
+    all(
+        any(feature = &quot;nom&quot;, feature = &quot;combine&quot;, feature = &quot;pest&quot;, feature = &quot;hand&quot;),
+        not(feature = &quot;bench&quot;)
+        )
+)]
+fn main() {
+    for d in random_durations::gen_random_durs(get_count()) {
+        let s = format!(&quot;{}&quot;, d);
+        let p = parser::parse(&amp;s).unwrap();
+        assert_eq!(d, p);
+        println!(&quot;duration:{}\nparsed to\n{}&quot;, d, p.human_readable());
+    }
+}
+
+fn get_count() -&gt; usize {
+    for arg in ::std::env::args() {
+        match arg.parse() {
+            Ok(u) =&gt; return u,
+            Err(_) =&gt; ()
+        }
+    }
+    return 1000
+}
+</code></pre></pre>
+<a class="header" href="#build-time" id="build-time"><h3>Build time</h3></a>
+<p>This is the time it took to run <code>cargo build</code> on each implementation. With the increasing improvement of incremental compilation, it isn't the most important metric but some people might care about it.</p>
+<a class="header" href="#bin-size" id="bin-size"><h3>Bin size</h3></a>
+<p>This is the size of the program when built using <code>cargo build --release</code>.</p>
+<a class="header" href="#parse-1" id="parse-1"><h3>Parse 1</h3></a>
+<p>This is the time <code>cargo +nightly bench</code> reported for this parser to parse 1 duration.</p>
+<a class="header" href="#parse-1000" id="parse-1000"><h3>Parse 1000</h3></a>
+<p>This is the time <code>cargo +nightly bench</code> reported for this parser to parse 1000 durations.</p>
+<!--web-only-end-->
+<!--slides-only-->
+<ul>
+<li>Binary application</li>
+<li>Build time = <code>cargo build</code></li>
+<li>Bin size = <code>cargo build --release</code></li>
+<li>Parse 1</li>
+<li>Parse 1000</li>
+</ul>
+<!--slides-only-end-->
+<table><thead><tr><th> crate       </th><th> parse 1 (+/-)      </th><th> parse 1000 (+/-)    </th><th> build time </th><th> bin size  </th></tr></thead><tbody>
+<tr><td> nom         </td><td> 750.00ns (30.00ns) </td><td> 839.67ms (145.31ms) </td><td> 19.02s     </td><td> 727.08 kb </td></tr>
+<tr><td> pest        </td><td> 3.94ms (346.00ns)  </td><td> 4.02s (481.76ms)    </td><td> 37.97s     </td><td> 767.86 kb </td></tr>
+<tr><td> combine     </td><td> 4.26ms (526.00ns)  </td><td> 3.90s (365.95ms)    </td><td> 29.06s     </td><td> 739.68 kb </td></tr>
+<tr><td> hand_rolled </td><td> 536.00ns (17.00ns) </td><td> 547.12ms (166.99ms) </td><td> 9.79s      </td><td> 718.87 kb </td></tr>
 </tbody></table>
-<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
@@ -174,6 +236,21 @@
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

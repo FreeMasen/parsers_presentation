@@ -1,0 +1,28 @@
+
+Duration = {
+    "P" ~ ((DateSection ~ TimeSection?) | (DateSection? ~ TimeSection))
+}
+DateSection = {
+    (Year? ~ MinuteOrMonth? ~ Week? ~ Day) |
+    (Year? ~ MinuteOrMonth? ~ Week ~ Day?) |
+    (Year? ~ MinuteOrMonth ~ Week? ~ Day?) |
+    (Year ~ MinuteOrMonth? ~ Week? ~ Day?)
+}
+TimeSection = { "T" ~ (
+    (Hour? ~ MinuteOrMonth? ~ Second) |
+    (Hour? ~ MinuteOrMonth ~ Second?) |
+    (Hour ~ MinuteOrMonth? ~ Second?)
+    )
+}
+Year = { Number ~ "Y" }
+Week = { Number ~ "W" }
+Day = { Number ~ "D" }
+Hour = { Number ~ "H" }
+MinuteOrMonth = { Number ~ "M" }
+Second = { Number ~ "S" }
+Number = { (Integer ~ Remainder?) |
+           (Integer? ~ Remainder)
+}
+Remainder = { "." ~ Integer }
+Integer = { Decimal+ }
+Decimal = { ASCII_DIGIT }

@@ -1,5 +1,5 @@
 extern crate duration;
-use duration::Duration;
+use duration::{Duration, DurationPart};
 
 
 pub fn parse(s: &str) -> Result<Duration, String> {
@@ -81,16 +81,6 @@ fn update_duration(d: &mut Duration, part: &DurationPart) {
         DurationPart::Minutes(v) => d.set_minutes(*v),
         DurationPart::Seconds(v) => d.set_seconds(*v),
     }
-}
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
 }
 
 #[cfg(test)]

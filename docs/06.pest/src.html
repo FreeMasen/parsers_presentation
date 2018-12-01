@@ -136,8 +136,64 @@
 
                 <div id="content" class="content">
                     <main>
-                        <style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+                        <style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
+<a class="header" href="#iso-8601-duration-parser" id="iso-8601-duration-parser"><h2>ISO 8601 Duration Parser</h2></a>
+<!--web-only-->
+<p>Before we start digging into the rust code, we should first cover the grammar file.</p>
+<p>It looks a lot like our BNF grammar, the biggest difference is that we have the opportunity to use some more flexible notation. For example the instead of having one rule for optional values and another for non-optional, we can use the <code>?</code> to say that any existing rule is optional. When noting that values repeat, we can use <code>+</code> to indicate 1 or more and the <code>*</code> to indicate 0 or more. These might be familiar to you if you have used regular expressions.</p>
+<p>Some other things to keep in mind when using the <code>pest</code> grammar syntax, the right hand side of a rule needs to be wrapped in curly braces and each segment should be separated with <code>~</code>. There are some more advanced things you can do with this style but we don't need them here.</p>
+<p>Starting from the bottom again, first we define our <code>decimal</code> rule, this is really just an alias for the <code>ASCII_DIGIT</code> rule provided by <code>pest</code>. Next we have <code>integer</code> which is 1 or more <code>decimal</code>s. Then remainder, a period followed by an integer, notice that strings need to be wrapped in double quotes. Now we can define our <code>number</code> rule as either an <code>integer</code> with an optional <code>remainder</code> or an optional <code>integer</code> followed by a <code>remainder</code>. Above that is all of our unit/value pairs followed by the <code>time_section</code> and <code>date_section</code> rules. All the way at the top we have the <code>Duration</code> rule.</p>
+<pre><code>
+Duration = {
+    &quot;P&quot; ~ ((DateSection ~ TimeSection?) | (DateSection? ~ TimeSection))
+}
+DateSection = {
+    (Year? ~ MinuteOrMonth? ~ Week? ~ Day) |
+    (Year? ~ MinuteOrMonth? ~ Week ~ Day?) |
+    (Year? ~ MinuteOrMonth ~ Week? ~ Day?) |
+    (Year ~ MinuteOrMonth? ~ Week? ~ Day?)
+}
+TimeSection = { &quot;T&quot; ~ (
+    (Hour? ~ MinuteOrMonth? ~ Second) |
+    (Hour? ~ MinuteOrMonth ~ Second?) |
+    (Hour ~ MinuteOrMonth? ~ Second?)
+    )
+}
+Year = { Number ~ &quot;Y&quot; }
+Week = { Number ~ &quot;W&quot; }
+Day = { Number ~ &quot;D&quot; }
+Hour = { Number ~ &quot;H&quot; }
+MinuteOrMonth = { Number ~ &quot;M&quot; }
+Second = { Number ~ &quot;S&quot; }
+Number = { (Integer ~ Remainder?) |
+           (Integer? ~ Remainder)
+}
+Remainder = { &quot;.&quot; ~ Integer }
+Integer = { Decimal+ }
+Decimal = { ASCII_DIGIT }
+</code></pre>
+<p>Now for the rust part, to start we are going to use a derive provided by pest for their trait <code>Parser</code>. The derive allows for an attribute <code>grammar</code> which should be assigned the relative plath to the grammar file. We apply these to a unit struct, I called my <code>DurationParser</code>. This will create an enum called <code>Rule</code> that will have one variant for each of the rules in our grammar file. For us this would look something like this.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+enum Rule {
+    Duration,
+    DateSection,
+    TimeSection,
+    Year,
+    Week,
+    Day,
+    MinuteOrMonth,
+    Second,
+    Number,
+    Remainder,
+    Integer,
+    Decimal,
+}
+#}</code></pre></pre>
+<p>Inside of the <code>parse</code> function, the first thing we do is call <code>DurationParser::parse</code>, providing the rule we are looking to parse, in this case <code>Rule::Duration</code> and the <code>&amp;str</code>. This is going to return a <code>Result</code> with a <code>Pairs</code> in the success position. <code>Pairs</code> is an <code>iterator</code> over <code>Pair</code>. For our case, we just need to first <code>Pair</code> so we can call <code>next</code> to get that. Once we have that we can pass it off to <code>assemble_parts</code>, which will take the <code>Pair</code> and pull out the inner rules. You can think about that in the same way our grammar is layed out, the <code>Duration</code> rule had <code>DateSection</code> and <code>TimeSection</code> in its definition, so the inner pairs would be one of these two variants of the <code>Rule</code> enum.</p>
+<p>Once we have the inner values we are going to loop over them and pass it off to <code>assemble_part</code>. This is again going to pull out the inner <code>Pair</code> which should be one of the unit value rules. Once it has pulled that out it passes that pair off to <code>update_duration</code>. Here we are going to first get the float value from the pair, we do this by calling <code>as_str</code> on the <code>Pair</code> which gives the full slice of the original, we know the last character is the unit wo we call <code>parse</code> on the sub string not including that. Now that we have the value, we can just match on the <code>Pair::as_rule</code> which will be one of our unit variants. At each stage we have passed down a mutable reference to the <code>Duration</code> we are assembling, making it easier to update it as needed. That is it, we off loaded quite a bit of the logic to the parser generator.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -147,7 +203,10 @@ extern crate pest;
 extern crate pest_derive;
 
 use duration::Duration;
-use pest::Parser;
+use pest::{
+    Parser,
+    iterators::Pair,
+};
 
 #[derive(Parser)]
 #[grammar = &quot;duration.pest&quot;]
@@ -161,15 +220,15 @@ pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
     let ret = assemble_parts(duration)?;
     Ok(ret)
 }
-use pest::iterators::Pair;
-fn assemble_parts(pair: pest::iterators::Pair&lt;Rule&gt;) -&gt; Result&lt;Duration, String&gt; {
+
+fn assemble_parts(pair: Pair&lt;Rule&gt;) -&gt; Result&lt;Duration, String&gt; {
     let mut ret = Duration::new();
     for part in pair.into_inner() {
         match part.as_rule() {
-            Rule::date_section =&gt; {
+            Rule::DateSection =&gt; {
                 assemble_part(&amp;mut ret, part, false)?;
             },
-            Rule::time_section =&gt; {
+            Rule::TimeSection =&gt; {
                 assemble_part(&amp;mut ret, part, true)?;
             },
             _ =&gt; unreachable!()
@@ -188,10 +247,10 @@ fn assemble_part(d: &amp;mut Duration, pair: pest::iterators::Pair&lt;Rule&gt;, 
 fn update_duration(d: &amp;mut Duration, pair: &amp;Pair&lt;Rule&gt;, time: bool) -&gt; Result&lt;(), String&gt; {
     let f = get_float(pair)?;
     match pair.as_rule() {
-        Rule::year =&gt; {
+        Rule::Year =&gt; {
             d.set_years(f);
         },
-        Rule::minute_or_month =&gt; {
+        Rule::MinuteOrMonth =&gt; {
             if time {
                 //minute
                 d.set_minutes(f);
@@ -200,16 +259,16 @@ fn update_duration(d: &amp;mut Duration, pair: &amp;Pair&lt;Rule&gt;, time: bool
                 d.set_months(f);
             }
         },
-        Rule::week =&gt; {
+        Rule::Week =&gt; {
             d.set_weeks(f);
         },
-        Rule::day =&gt; {
+        Rule::Day =&gt; {
             d.set_days(f);
         }
-        Rule::hour =&gt; {
+        Rule::Hour =&gt; {
             d.set_hours(f);
         }
-        Rule::second =&gt; {
+        Rule::Second =&gt; {
             d.set_seconds(f);
         },
         _ =&gt; unreachable!()
@@ -232,29 +291,13 @@ mod test {
     }
 }
 #}</code></pre></pre>
-<script>
-(function() {
-    var pp = getPlaypen();
-    var mode = localStorage.getItem('presentation_mode');
-    if (!pp) return;
-    pp.classList.add('article-content');
-    if (mode == 1) {
-        pp.classList.add('not-presenting');
-    } else if (mode == 0) {
-        pp.classList.add('presenting');
-    }
-
-    function getPlaypen() {
-        var cls = '.playpen';
-        var pre = document.querySelectorAll(cls);
-        if (!pre || pre.length < 1) return console.error('failed to find', cls);
-        pre = pre[pre.length - 1];
-        if (!pre || !pre.parentElement) return console.error('unknown structure of', cls);
-        return pre.parentElement;
-    }
-})()
-</script>
-<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
+<!--web-only-end-->
+<!--slides-only-->
+<a class="header" href="#d-e-m-o" id="d-e-m-o"><h1>D-E-M-O</h1></a>
+<a class="header" href="#demo" id="demo"><h1>demo!</h1></a>
+<a class="header" href="#demo-1" id="demo-1"><h1>demo!</h1></a>
+<!--slides-only-end-->
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
@@ -292,6 +335,21 @@ mod test {
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

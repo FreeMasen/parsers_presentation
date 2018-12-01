@@ -136,13 +136,18 @@
 
                 <div id="content" class="content">
                     <main>
-                        <style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+                        <style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
+<a class="header" href="#parser" id="parser"><h1>Parser</h1></a>
+<!--web-only-->
+<p>With this one, we can start from the top. Our entry point, as always, is the <code>parse</code> function. The first step here is to check if the first character is a <code>P</code>, if it isn't we can stop this is not a <code>Duration</code>. Next we want to split the <code>&amp;str</code> into parts, the first part would be everything after <code>P</code> and before <code>T</code>, the second would be everything from <code>T</code> to the end of the string.</p>
+<p>Once we split it up, we can expect there to be, at most, 2 parts so a manual calls to <code>next</code> on the <code>Split</code> iterator should be enough. We can feel confident that the first one is going to be the date part because calling <code>split</code> on <code>T3H</code> would be <code>&quot;&quot;</code> followed by <code>&quot;3D&quot;</code>, so first we test that <code>next</code> is <code>Some</code> then we double check it isn't <code>&quot;&quot;</code>, if both are true we can pass the first half to <code>parse_parts</code> with the <code>false</code> as the second argument.</p>
+<p><code>parse_parts</code> takes in one half of the duration and a flag to indicate if <code>M</code> should be a month or a minute. It first finds all of the <code>char_indices</code> that have one of our unit characters. We are going to need to keep track of our position in this <code>&amp;str</code> and this is done with the <code>start_idx</code> variable. We can now loop over the indices getting a slice of the input string from the <code>start_index</code> to the <code>idx</code> of the unit character which we want to parse as an <code>f32</code>. Next we want to match on the unit character which should be at the <code>idx</code>, using the <code>time</code> flag to determine if <code>M</code> means minute or month, we create a duration part. We are going to collect all of these parts in a <code>Vec&lt;DurationPart&gt;</code> to eventually return it so we push the duration into that <code>Vec</code> and finally update the<code>start_idx</code> to be the <code>idx</code> + 1. This should get us through all of the parsing, next we need to collect these <code>DurationPart</code>s into a <code>Duration</code>. We do that by passing a mutable reference to a <code>Duration</code> along with the each of the <code>DurationPart</code>s off to the <code>update_duration</code> function. This just matches on the <code>DurationPart</code> and updates the provided <code>Duration</code> accordingly. We do this for both of our expected iterator items and we are done. There is a check in here to make sure that there is at least 1 unit/value pair.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
 extern crate duration;
-use duration::Duration;
+use duration::{Duration, DurationPart};
 
 
 pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
@@ -226,16 +231,6 @@ fn update_duration(d: &amp;mut Duration, part: &amp;DurationPart) {
     }
 }
 
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -259,29 +254,12 @@ mod test {
     }
 }
 #}</code></pre></pre>
-<script>
-(function() {
-    var pp = getPlaypen();
-    var mode = localStorage.getItem('presentation_mode');
-    if (!pp) return;
-    pp.classList.add('article-content');
-    if (mode == 1) {
-        pp.classList.add('not-presenting');
-    } else if (mode == 0) {
-        pp.classList.add('presenting');
-    }
-
-    function getPlaypen() {
-        var cls = '.playpen';
-        var pre = document.querySelectorAll(cls);
-        if (!pre || pre.length < 1) return console.error('failed to find', cls);
-        pre = pre[pre.length - 1];
-        if (!pre || !pre.parentElement) return console.error('unknown structure of', cls);
-        return pre.parentElement;
-    }
-})()
-</script>
-<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
+<!--web-only-end-->
+<!--slides-only-->
+<a class="header" href="#are-we-not-men" id="are-we-not-men"><h1>Are we not men?</h1></a>
+<a class="header" href="#we-are-demo" id="we-are-demo"><h1>We are demo!</h1></a>
+<!--slides-only-end-->
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
@@ -319,6 +297,21 @@ mod test {
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         

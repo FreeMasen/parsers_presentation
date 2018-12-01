@@ -136,13 +136,31 @@
 
                 <div id="content" class="content">
                     <main>
-                        <style>.presentation-only.not-presenting{display:none}.presentation-only.presenting{display:block}.article-content.not-presenting{display:block}.article-content.presenting{display:none}
+                        <style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
+<!--web-only-->
+<p>To start, I want to point out how <code>combine</code> is able to create combinators w/o using macros. It heavily leverages the <code>impl Trait</code> feature released this year. looking the signature of the <code>float</code> parser:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn float&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = f32&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+#}</code></pre></pre>
+<p>We are saying that this function will return a parser who's input is of type <code>I</code> and output is an <code>f32</code>. Additionally we constrain <code>I</code> saying it needs to implement <code>Stream</code>, where the <code>Item</code> type is a <code>char</code>, and the <code>Error</code> type of <code>I</code> needs to implement <code>ParseError</code>. <code>ParseError</code> is also generic so we pass along the properties of <code>I</code>, <code>Item</code>, <code>Range</code>, and <code>Position</code>. This is pretty verbose, but I found that building a simple parser I didn't need to worry a ton about what it meant, instead just using it as a blueprint for all of my parser functions. That is to say, I just copied and pasted this whenever I wanted to add another parser to a source file.</p>
+<p>One thing to keep in mind is that these functions are not parsing the input but returning a struct that will be able to parse the input. We define these structs by combining them together and mapping over the result if successful. To indicate that parsers are chained together in a sequence we wrap them in either an array if they are all the exact same type otherwise we would use a tuple. Looking at the body of <code>float</code> we are using a tuple, with two parers inside it. The first parser is <code>many1</code> this takes a parser as an argument and applies it a minimum of 1 times but will collect the results until in argument parser fails, we passed in the result of calling <code>digit</code> which is a parser that will get us a single digit number. Next we have <code>optional</code> this takes in a parser and wraps the result in an <code>Option</code>, we pass it a tuple of 2 parsers the <code>char</code> parser, this is a single character and another <code>many1</code> with <code>digit</code> as its argument. Notice in this second call to <code>many1</code> we included a type annotation, <code>many1</code> operates similar to the <code>collect</code> method on an <code>iterator</code>, the result could be a number of different collections we are just telling it it should be a <code>String</code>.</p>
+<p>We now call <code>map</code> on our tuple, this essentially is saying if you find the pattern we defined, call this closure to generate the result. In this closure we are going to check and see if the remainder exists and coalesce that into a string with the integer portion if not just use the integer portion. We then call <code>str::parse</code> on that coalesced value.</p>
+<p>Moving up the file we next see <code>value_pair</code> the signature is similar to <code>float</code> though the <code>Output</code> type is <code>DurationPart</code> and it takes in an argument <code>time</code> to determine if <code>M</code> is a minute or a month. Again here we have a tuple, the first parser is the <code>float</code> parser we just defined, next is a <code>choice</code> parser, this takes in an array or tuple of parsers and tries each one starting at the top, stopping at the first successful. We have passed <code>choice</code> an array of <code>char</code> parsers with our unit characters. We map our tuple, this time our closure has the <code>move</code> keyword to take ownership of the <code>time</code> argument. We have annotated the argument to our closure to help the compiler figure out what we are trying to do here. <code>map</code> on a parser always takes 1 argument, this will be a tuple of the results, for us that is <code>f32</code> and <code>char</code>. We simply match on the <code>char</code> and generate the correct <code>DurationPart</code> variant as per the letter and the time flag.</p>
+<p>Next we have the <code>time_part</code> parser, here we have another tuple, the first parser is a call to <code>char</code> with our <code>T</code> indicator that this is time based values, the second is a <code>many1</code> call to the <code>value_pair</code> parser we just defined, passing <code>true</code> for the <code>time</code> flag. The map here is simply discarding the <code>T</code> character, that make the <code>Output</code> type annotation work for <code>p</code> which means it also work for <code>many1</code>.</p>
+<p>After <code>time_part</code> we have <code>date_part</code> this one is just the <code>many1</code> call to <code>value_pair</code> passing <code>false</code> for the <code>time</code> flag.</p>
+<p>The last of the parsers we are going to define is <code>duration</code>, this is another tuple indicating the sequence of a <code>char</code> of <code>P</code> followed by an <code>optional</code> <code>date_part</code> followed by an <code>optional</code> <code>time_part</code>. We <code>map</code> that, the argument to the <code>map</code> closure would be <code>(char, Option&lt;Vec&lt;DurationPart&gt;&gt;, Option&lt;Vec&lt;DurationPart&gt;&gt;)</code>. In the body we loop over those two <code>Vec</code>s if they exist, adding them to a <code>Duration</code> returning the result.</p>
+<p>In our <code>parse</code> function we create a <code>Duration</code> parser by calling <code>duration</code> and then pass a <code>&amp;str</code> to the <code>parse</code> method, this is one of the methods defined on the <code>Parser</code> trait. <code>Parse</code> returns a <code>Result</code> and in the <code>Ok</code> position we have a tuple, the first item has the same type as <code>Output</code> and the second is the remaining input to parse. For us the <code>Output</code> is going to be a <code>Duration</code> so we return <code>Ok(d.0)</code></p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
 extern crate duration;
-use duration::Duration;
+use duration::{Duration, DurationPart};
 extern crate combine;
 use combine::{
     choice,
@@ -164,7 +182,7 @@ where
     I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
 {
     (
-        combine::parser::char::char('P'),
+        char('P'),
         optional(date_part()),
         optional(time_part()),
     ).map(|(_, d, t)| {
@@ -256,18 +274,12 @@ where
         f.parse().unwrap()
     })
 }
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
-}
 #}</code></pre></pre>
-<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.mode=this.getMode(),this.setMode(),this.updatePage(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t],o=n.getAttribute("class");this.mode===PresentationMode.Slides?n.setAttribute("class",this.swapClass("presenting","not-presenting",o)):n.setAttribute("class",this.swapClass("not-presenting","presenting",o))}},e.prototype.swapClass=function(n,o,e){var t=e.split(" "),r=null;return t=t.filter(function(e,t){return e==n&&(r=t),e!=o}),null===r&&t.push(n),t.join(" ")},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
+<!--web-only-end-->
+<!--slides-only-->
+<a class="header" href="#demo-time" id="demo-time"><h1>Demo Time!</h1></a>
+<!--slides-only-end-->
+<script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
@@ -305,6 +317,21 @@ enum DurationPart {
 
         </div>
 
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3001");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
         
 
         
