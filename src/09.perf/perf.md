@@ -20,12 +20,5 @@ This is the time `cargo +nightly bench` reported for this parser to parse 1 dura
 This is the time `cargo +nightly bench` reported for this parser to parse 1000 durations.
 
 $web-only-end$
-$slides-only$
-- Binary application
-- Build time = `cargo build`
-- Bin size = `cargo build --release`
-- Parse 1
-- Parse 1000
-$slides-only-end$
 
 {{#include benches.md}}

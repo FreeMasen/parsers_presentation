@@ -45,7 +45,7 @@ class Impl {
                 this.name,
                 this.benchOne.toString(),
                 this.bench1000.toString(),
-                formatTime(this.build),
+                this.build,
                 formatSize(this.size),
             ]
         }
@@ -53,16 +53,16 @@ class Impl {
 
 const IMPLS = [
     new Impl("nom"),
-    new Impl("pest"),
     new Impl("combine"),
+    new Impl("pest"),
     new Impl("hand", 'hand_rolled'),
 ];
 
 const test_benches = [
-    new Impl('nom', 'nom', randomBench(1000, 500), randomBench(5000, 1000), Math.random() * 1000, Math.random() * 1000),
-    new Impl('pest', 'pest', randomBench(1000, 500), randomBench(5000, 1000), Math.random() * 1000, Math.random() * 1000),
-    new Impl('combine', 'combine', randomBench(1000, 500), randomBench(5000, 1000), Math.random() * 1000, Math.random() * 1000),
-    new Impl('hand', 'hand_rolled', randomBench(1000, 500), randomBench(5000, 1000), Math.random() * 1000, Math.random() * 1000),
+    new Impl('nom', 'nom', randomBench(1000, 500), randomBench(5000, 1000), `${(Math.random() * 1000).toFixed(2)}s`, Math.random() * 1000),
+    new Impl('pest', 'pest', randomBench(1000, 500), randomBench(5000, 1000), `${(Math.random() * 1000).toFixed(2)}s`, Math.random() * 1000),
+    new Impl('combine', 'combine', randomBench(1000, 500), randomBench(5000, 1000), `${(Math.random() * 1000).toFixed(2)}s`, Math.random() * 1000),
+    new Impl('hand', 'hand_rolled', randomBench(1000, 500), randomBench(5000, 1000), `${(Math.random() * 1000).toFixed(2)}s`, Math.random() * 1000),
 ]
 
 function randomBench(limit1, limit2) {
@@ -107,8 +107,7 @@ function parse_build_output(output) {
         }
     }
     if (line) {
-        let trimmed = line.replace(PREDICATE, '').trim();
-        return parseFloat(trimmed);
+        return line.replace(PREDICATE, '').trim();
     }
 }
 
@@ -221,9 +220,7 @@ function updateImplsWithBenches(output) {
         if (!ret[key]) {
             ret[key] = {}
         }
-        let time = formatTime(ns);
-        let diff = formatTime(overUnder);
-        ret[key][subKey] = new Bench(time, diff);
+        ret[key][subKey] = new Bench(ns, overUnder);
     }
     return ret;
 }
@@ -243,11 +240,10 @@ function runBenches() {
  * @param {string[]} data
  */
 function createTableRow(...data) {
-    return '|' + data.join(' | ') + '|';
+    return '| ' + data.join(' | ') + ' |';
 }
 
 function createTable(benches) {
-    // let header = createTableRow('crate', 'parse 1 (+/-)', 'parse 1000 (+/-)', 'build time', 'release size');
     let table = [['crate', 'parse 1 (+/-)', 'parse 1000 (+/-)', 'build time', 'release size']];
     for (var i = 0; i < benches.length; i++) {
         table.push(benches[i].asArr());
@@ -267,11 +263,11 @@ function createTable(benches) {
         for (var j = 0; j < row.length;j++) {
             let width = widths[j]
             if (!headerDiv[j]) {
-                headerDiv[j] = ` ${'-'.repeat(width)} `;
+                headerDiv[j] = `${'-'.repeat(width)}`;
             }
             let cell = row[j];
             let padding = width - cell.length;
-            row[j] = ` ${cell}${' '.repeat(padding)} `
+            row[j] = `${cell}${' '.repeat(padding)}`
         }
     }
     let header = table.shift();
@@ -301,19 +297,24 @@ async function getAll() {
             impl.size = await getSize(impl.feature);
             console.log('release size:', impl.size);
         }
+        return IMPLS;
     } catch (e) {
         console.error('error capturing information', e);
     }
 }
 
 async function rmain(isTest, fileName) {
-    let filledIn;
-    if (isTest) {
-        filledIn = test_benches;
-    } else {
-        filledIn = await getAll();
+    try {
+        let filledIn;
+        if (isTest) {
+            filledIn = test_benches;
+        } else {
+            filledIn = await getAll();
+        }
+        report(filledIn, fileName);
+    } catch (e) {
+        console.error(e);
     }
-    report(filledIn, fileName);
 }
 
 
