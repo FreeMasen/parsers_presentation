@@ -3,10 +3,17 @@ $web-only$
 Before we dig into each implementation, I want to cover a few things that are common
 to most of the examples. The first thing they share is the following enum.
 $web-only-end$
-$slides-only$
-- Duration part
-- One for each unit
-$slides-only-end$
+```rust
+pub struct Duration {
+    years: Option<f32>,
+    months: Option<f32>,
+    weeks: Option<f32>,
+    days: Option<f32>,
+    hours: Option<f32>,
+    minutes: Option<f32>,
+    seconds: Option<f32>,
+}
+```
 
 ```rust
 enum DurationPart {
@@ -28,11 +35,6 @@ The next thing that pops up across multiple crates is the need to parse a string
 
 For this we are going to lean on the implementation in the standard library so it will typically just look like this.
 $web-only-end$
-$slides-only$
-- Convert `&str` to `f32`
-- Using `std::str::parse`
-- Returns a result
-$slides-only-end$
 
 ```rust
 let value_str = "1.222";
@@ -46,6 +48,3 @@ $web-only-end$
 $web-only$
 The last thing to cover here is that each parser will need to deal with the fact that `M` can mean either month or minute. While there isn't a shared code solution for this, it does pop up a few times.
 $web-only-end$
-$slides-only$
-- Month or Minute
-$slides-only-end$

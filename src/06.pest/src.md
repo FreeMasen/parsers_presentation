@@ -1,4 +1,4 @@
-## ISO 8601 Duration Parser
+# Pest
 
 $web-only$
 Before we start digging into the rust code, we should first cover the grammar file.

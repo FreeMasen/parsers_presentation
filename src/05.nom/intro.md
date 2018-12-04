@@ -20,7 +20,7 @@ $web-only$
 $web-only-end$
 $slides-only$
 - Performance
-- Battle Tested
+- Heavily used
 $slides-only-end$
 
 ## Negatives

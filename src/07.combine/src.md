@@ -1,3 +1,4 @@
+# Combine
 $web-only$
 To start, I want to point out how `combine` is able to create combinators w/o using macros. It heavily leverages the `impl Trait` feature released this year. looking the signature of the `float` parser:
 

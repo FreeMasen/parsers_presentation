@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li class="affix"><a href="../01.welcome/welcome.html">Welcome</a></li><li><a href="../02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="../03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="../04.baseline/iso_duration.html"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="../04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="../04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="../05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="../05.nom/parser.html"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="../06.pest/intro.html"><strong aria-hidden="true">7.</strong> Pest</a></li><li><ol class="section"><li><a href="../06.pest/src.html"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="../07.combine/intro.html"><strong aria-hidden="true">8.</strong> Combine</a></li><li><ol class="section"><li><a href="../07.combine/src.html" class="active"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="../08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="../08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="../09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li></ol>
+            <ol class="chapter"><li class="affix"><a href="../01.welcome/welcome.html">Welcome</a></li><li><a href="../02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="../03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="../04.baseline/iso_duration.html"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="../04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="../04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="../05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="../05.nom/parser.html"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="../07.combine/intro.html"><strong aria-hidden="true">7.</strong> Combine</a></li><li><ol class="section"><li><a href="../07.combine/src.html" class="active"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="../06.pest/intro.html"><strong aria-hidden="true">8.</strong> Pest</a></li><li><ol class="section"><li><a href="../06.pest/src.html"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="../08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="../08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="../09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li><li><a href="../10.combine/intro.html"><strong aria-hidden="true">11.</strong> Combine Revisited</a></li><li><ol class="section"><li><a href="../10.combine/src.html"><strong aria-hidden="true">11.1.</strong> Parser</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -138,6 +138,7 @@
                     <main>
                         <style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
+<a class="header" href="#combine" id="combine"><h1>Combine</h1></a>
 <!--web-only-->
 <p>To start, I want to point out how <code>combine</code> is able to create combinators w/o using macros. It heavily leverages the <code>impl Trait</code> feature released this year. looking the signature of the <code>float</code> parser:</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -291,7 +292,7 @@ where
                         
 
                         
-                            <a rel="next" href="../08.hand_rolled/intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../06.pest/intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -309,7 +310,7 @@ where
                 
 
                 
-                    <a href="../08.hand_rolled/intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="../06.pest/intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

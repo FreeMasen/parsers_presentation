@@ -1,4 +1,4 @@
-# Parser
+# DIY
 $web-only$
 With this one, we can start from the top. Our entry point, as always, is the `parse` function. The first step here is to check if the first character is a `P`, if it isn't we can stop this is not a `Duration`. Next we want to split the `&str` into parts, the first part would be everything after `P` and before `T`, the second would be everything from `T` to the end of the string.
 

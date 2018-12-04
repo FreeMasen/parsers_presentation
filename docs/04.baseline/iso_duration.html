@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li class="affix"><a href="../01.welcome/welcome.html">Welcome</a></li><li><a href="../02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="../03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="../04.baseline/iso_duration.html" class="active"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="../04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="../04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="../05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="../05.nom/parser.html"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="../06.pest/intro.html"><strong aria-hidden="true">7.</strong> Pest</a></li><li><ol class="section"><li><a href="../06.pest/src.html"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="../07.combine/intro.html"><strong aria-hidden="true">8.</strong> Combine</a></li><li><ol class="section"><li><a href="../07.combine/src.html"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="../08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="../08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="../09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li></ol>
+            <ol class="chapter"><li class="affix"><a href="../01.welcome/welcome.html">Welcome</a></li><li><a href="../02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="../03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="../04.baseline/iso_duration.html" class="active"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="../04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="../04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="../05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="../05.nom/parser.html"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="../07.combine/intro.html"><strong aria-hidden="true">7.</strong> Combine</a></li><li><ol class="section"><li><a href="../07.combine/src.html"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="../06.pest/intro.html"><strong aria-hidden="true">8.</strong> Pest</a></li><li><ol class="section"><li><a href="../06.pest/src.html"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="../08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="../08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="../09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li><li><a href="../10.combine/intro.html"><strong aria-hidden="true">11.</strong> Combine Revisited</a></li><li><ol class="section"><li><a href="../10.combine/src.html"><strong aria-hidden="true">11.1.</strong> Parser</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -157,24 +157,9 @@ example will cover the same problems.</p>
 <a class="header" href="#basic-description" id="basic-description"><h3>Basic Description</h3></a>
 <ul>
 <li>Start with a capital letter <code>P</code></li>
-<li>At least one &quot;Duration Unit&quot;</li>
-<li>Duration Unit = decimal number + letter
-<ul>
-<li>Unspecified length</li>
-</ul>
-</li>
-<li>Duration Units
-<ul>
-<li>Years   (<code>Y</code>)</li>
-<li>Months  (<code>M</code>)</li>
-<li>Weeks   (<code>W</code>)</li>
-<li>Days    (<code>D</code>)</li>
-<li>Hours   (<code>H</code>)</li>
-<li>Minutes (<code>M</code>)</li>
-<li>Seconds (<code>S</code>)</li>
-</ul>
-</li>
-<li>Must be in that order</li>
+<li>up to 7 Decimal number + letter pairs</li>
+<li>Date half &amp; Time half (separator: <code>T</code>)</li>
+<li>letters: <code>Y</code>, <code>M</code>, <code>W</code>, <code>D</code>, <code>H</code>, <code>M</code>, <code>S</code></li>
 <li>Each is optional, minimum of 1 is required</li>
 <li>If at least one unit that comes after Days is present they must be preceded by <code>T</code></li>
 </ul>
@@ -184,24 +169,9 @@ example will cover the same problems.</p>
 <p>Here are some examples of different lengths of times as ISO 8601 Durations.</p>
 <!--web-only-end-->
 <ul>
-<li>One Day
-<ul>
-<li><code>P1D</code></li>
-<li><code>PT24H</code></li>
-<li><code>P0.14285W</code></li>
-</ul>
-</li>
-<li>One Hour
-<ul>
-<li><code>PT1H</code></li>
-<li><code>P0.041666D</code></li>
-</ul>
-</li>
-<li>One of Everything
-<ul>
-<li><code>P1Y1M1W1DT1H1M1.1S</code></li>
-</ul>
-</li>
+<li>One Day: <code>P1D</code>, <code>PT24H</code>, <code>P0.14285W</code></li>
+<li>One Hour: <code>PT1H</code>, <code>P0.041666D</code></li>
+<li>One of Everything: <code>P1Y1M1W1DT1H1M1.1S</code></li>
 </ul>
 <!--web-only-->
 <p>With any data format, there are a few things here that could be problematic in a real world scenario. First, the size of each value is unspecified meaning deserializing a duration with two great of value could lead to overflow. Second, the larger of the units don't always have a consistent or clear meaning, a good example of this would the <code>M</code>onth unit, Using the gregorian calendar a month could be anywhere from 28 to 31 days. I bring this up because theses are important things to think about when approaching deserialization or parsing process.</p>

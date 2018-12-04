@@ -2,10 +2,10 @@
 $slides-only$
 - `nom`
     - Macro based
-- `pest`
-    - External Grammar Files
 - `combine`
     - `impl Trait` based
+- `pest`
+    - External Grammar Files
 $slides-only-end$
 $web-only$
 First, I wanted to leverage the tools that already existed to make my life a little easier. I searched for a lower level byte parsing library, and found 3 options that I wanted to investigate.

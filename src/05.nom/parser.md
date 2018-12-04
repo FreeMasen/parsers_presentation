@@ -1,7 +1,5 @@
-## ISO 8601 Duration Parser
+## Nom
 $web-only$
-Below you will find my attempt at using `nom` to create a parser for our duration format.
-
 A good place to start when learning to use `nom` is the `named!` macro, this macro will create a function for you with a specific name and behavior. `named!` takes two arguments, the first is the function's name, this needs to include 2 generic arguments, the second is the function's body. This can be a little difficult to get used to but it isn't too much of a pain. The generic arguments provided with the name define the data type of the argument and return type respectively.
 
 This is already starting to feel difficult to explain, I will re-iterate one last time that the learning curve for `nom` is pretty steep.
@@ -9,6 +7,7 @@ This is already starting to feel difficult to explain, I will re-iterate one las
 Just like with our grammar, let's start at the bottom and move up. The first `named!` entry we have in that direction is called `float`, which takes `CompleteStr` and returns `f32`. The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.
 
 ```rust
+{{#include lib.rs}}
 fn float(i: CompleteStr) -> Result<f32, Error> {
     map_res!(take_while!(digit), parse_float)
 }
@@ -50,6 +49,7 @@ Our last `named!` is the final step for combining all of our previous work. Agai
 
 With all that we have finally built a `nom` parser that would take in our duration string and return a `Duration`. You will notice in the `parse` function that we actually call the last `named!` item manually providing the argument. This will always result in a `Result`, the `Ok` case for this result is going to be a pair, the first will be the remainder of the input, the second will be a `Duration`.
 
+{{#playpen lib.rs}}
 $web-only-end$
 $slides-only$
 
@@ -57,4 +57,3 @@ $slides-only$
 
 $slides-only-end$
 
-{{#playpen lib.rs}}

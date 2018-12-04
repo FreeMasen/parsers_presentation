@@ -18,18 +18,9 @@ $slides-only$
 
 ### Basic Description
 - Start with a capital letter `P`
-- At least one "Duration Unit"
-- Duration Unit = decimal number + letter
-    - Unspecified length
-- Duration Units
-    - Years   (`Y`)
-    - Months  (`M`)
-    - Weeks   (`W`)
-    - Days    (`D`)
-    - Hours   (`H`)
-    - Minutes (`M`)
-    - Seconds (`S`)
-- Must be in that order
+- up to 7 Decimal number + letter pairs
+- Date half & Time half (separator: `T`)
+- letters: `Y`, `M`, `W`, `D`, `H`, `M`, `S`
 - Each is optional, minimum of 1 is required
 - If at least one unit that comes after Days is present they must be preceded by `T`
 
@@ -39,15 +30,9 @@ $web-only$
 Here are some examples of different lengths of times as ISO 8601 Durations.
 $web-only-end$
 
-- One Day
-    - `P1D`
-    - `PT24H`
-    - `P0.14285W`
-- One Hour
-    - `PT1H`
-    - `P0.041666D`
-- One of Everything
-    - `P1Y1M1W1DT1H1M1.1S`
+- One Day: `P1D`, `PT24H`, `P0.14285W`
+- One Hour: `PT1H`, `P0.041666D`
+- One of Everything: `P1Y1M1W1DT1H1M1.1S`
 
 $web-only$
 With any data format, there are a few things here that could be problematic in a real world scenario. First, the size of each value is unspecified meaning deserializing a duration with two great of value could lead to overflow. Second, the larger of the units don't always have a consistent or clear meaning, a good example of this would the `M`onth unit, Using the gregorian calendar a month could be anywhere from 28 to 31 days. I bring this up because theses are important things to think about when approaching deserialization or parsing process.

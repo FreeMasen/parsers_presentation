@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li class="affix"><a href="../01.welcome/welcome.html">Welcome</a></li><li><a href="../02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="../03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="../04.baseline/iso_duration.html"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="../04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="../04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="../05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="../05.nom/parser.html" class="active"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="../06.pest/intro.html"><strong aria-hidden="true">7.</strong> Pest</a></li><li><ol class="section"><li><a href="../06.pest/src.html"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="../07.combine/intro.html"><strong aria-hidden="true">8.</strong> Combine</a></li><li><ol class="section"><li><a href="../07.combine/src.html"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="../08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="../08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="../09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li></ol>
+            <ol class="chapter"><li class="affix"><a href="../01.welcome/welcome.html">Welcome</a></li><li><a href="../02.intro/introduction.html"><strong aria-hidden="true">1.</strong> Me</a></li><li><a href="../03.options/choices.html"><strong aria-hidden="true">2.</strong> Choices</a></li><li><a href="../04.baseline/iso_duration.html"><strong aria-hidden="true">3.</strong> Format</a></li><li><a href="../04.baseline/bnf.html"><strong aria-hidden="true">4.</strong> Grammar</a></li><li><a href="../04.baseline/common_code.html"><strong aria-hidden="true">5.</strong> Common Code</a></li><li><a href="../05.nom/intro.html"><strong aria-hidden="true">6.</strong> Nom</a></li><li><ol class="section"><li><a href="../05.nom/parser.html" class="active"><strong aria-hidden="true">6.1.</strong> Parser</a></li></ol></li><li><a href="../07.combine/intro.html"><strong aria-hidden="true">7.</strong> Combine</a></li><li><ol class="section"><li><a href="../07.combine/src.html"><strong aria-hidden="true">7.1.</strong> Parser</a></li></ol></li><li><a href="../06.pest/intro.html"><strong aria-hidden="true">8.</strong> Pest</a></li><li><ol class="section"><li><a href="../06.pest/src.html"><strong aria-hidden="true">8.1.</strong> Parser</a></li></ol></li><li><a href="../08.hand_rolled/intro.html"><strong aria-hidden="true">9.</strong> DIY</a></li><li><ol class="section"><li><a href="../08.hand_rolled/src.html"><strong aria-hidden="true">9.1.</strong> Parser</a></li></ol></li><li><a href="../09.perf/perf.html"><strong aria-hidden="true">10.</strong> Stats</a></li><li><a href="../10.combine/intro.html"><strong aria-hidden="true">11.</strong> Combine Revisited</a></li><li><ol class="section"><li><a href="../10.combine/src.html"><strong aria-hidden="true">11.1.</strong> Parser</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -138,15 +138,118 @@
                     <main>
                         <style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
-<a class="header" href="#iso-8601-duration-parser" id="iso-8601-duration-parser"><h2>ISO 8601 Duration Parser</h2></a>
+<a class="header" href="#nom" id="nom"><h2>Nom</h2></a>
 <!--web-only-->
-<p>Below you will find my attempt at using <code>nom</code> to create a parser for our duration format.</p>
 <p>A good place to start when learning to use <code>nom</code> is the <code>named!</code> macro, this macro will create a function for you with a specific name and behavior. <code>named!</code> takes two arguments, the first is the function's name, this needs to include 2 generic arguments, the second is the function's body. This can be a little difficult to get used to but it isn't too much of a pain. The generic arguments provided with the name define the data type of the argument and return type respectively.</p>
 <p>This is already starting to feel difficult to explain, I will re-iterate one last time that the learning curve for <code>nom</code> is pretty steep.</p>
 <p>Just like with our grammar, let's start at the bottom and move up. The first <code>named!</code> entry we have in that direction is called <code>float</code>, which takes <code>CompleteStr</code> and returns <code>f32</code>. The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
+extern crate duration;
+#[macro_use]
+extern crate nom;
+use nom::types::CompleteStr;
+use duration::Duration;
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let pair = duration(s.into()).map_err(|e| format!(&quot;{}&quot;, e))?;
+    Ok(pair.1)
+}
+
+named!(duration&lt;CompleteStr, Duration&gt;,
+    do_parse!(
+        tag!(&quot;P&quot;) &gt;&gt;
+        date_parts: opt!(many_m_n!(1, 4, date_part)) &gt;&gt;
+        time_parts: opt!(time_parts) &gt;&gt;
+        (combine_duration_parts(date_parts, time_parts))
+    )
+);
+
+fn combine_duration_parts(date_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;, time_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;) -&gt; Duration {
+    let mut duration = Duration::new();
+    for part in date_parts.unwrap_or(Vec::new()).iter().chain(time_parts.unwrap_or(Vec::new()).iter()) {
+        match part {
+            DurationPart::Years(value) =&gt; duration.set_years(*value),
+            DurationPart::Months(value) =&gt; duration.set_months(*value),
+            DurationPart::Weeks(value) =&gt; duration.set_weeks(*value),
+            DurationPart::Days(value) =&gt; duration.set_days(*value),
+            DurationPart::Hours(value) =&gt; duration.set_hours(*value),
+            DurationPart::Minutes(value) =&gt; duration.set_minutes(*value),
+            DurationPart::Seconds(value) =&gt; duration.set_seconds(*value),
+        }
+    }
+    duration
+}
+
+named!(time_parts&lt;CompleteStr, Vec&lt;DurationPart&gt;&gt;,
+    do_parse!(
+        tag!(&quot;T&quot;) &gt;&gt;
+        time_parts: many_m_n!(1, 3, time_part) &gt;&gt;
+        (time_parts)
+    )
+);
+
+named!(date_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, false))
+    )
+);
+
+
+named!(time_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, true))
+    )
+);
+
+fn combine_duration_part(value: f32, flag: CompleteStr, is_time: bool) -&gt; DurationPart {
+    match *flag {
+        &quot;Y&quot; =&gt; DurationPart::Years(value),
+        &quot;M&quot; =&gt; if is_time {
+            DurationPart::Minutes(value)
+        } else {
+            DurationPart::Months(value)
+        },
+        &quot;W&quot; =&gt; DurationPart::Weeks(value),
+        &quot;D&quot; =&gt; DurationPart::Days(value),
+        &quot;H&quot; =&gt; DurationPart::Hours(value),
+        &quot;S&quot; =&gt; DurationPart::Seconds(value),
+        _ =&gt; unreachable!()
+    }
+}
+
+named!(duration_part&lt;CompleteStr, (f32, CompleteStr)&gt;,
+    do_parse!(
+        value: float &gt;&gt;
+        flag: take!(1) &gt;&gt;
+        (value, flag)
+    )
+);
+
+
+named!(float&lt;CompleteStr, f32&gt;,
+    map_res!(take_while1!(digit), parse_float)
+);
+
+fn digit(c: char) -&gt; bool {
+    c.is_digit(10) || c == '.'
+}
+
+fn parse_float(s: CompleteStr) -&gt; Result&lt;f32, ::std::num::ParseFloatError&gt; {
+    s.parse()
+}
+
+enum DurationPart {
+    Years(f32),
+    Months(f32),
+    Weeks(f32),
+    Days(f32),
+    Hours(f32),
+    Minutes(f32),
+    Seconds(f32),
+}
 fn float(i: CompleteStr) -&gt; Result&lt;f32, Error&gt; {
     map_res!(take_while!(digit), parse_float)
 }
@@ -176,10 +279,6 @@ fn take(i: CompleteStr) -&gt; Result&lt;CompleteStr, Error&gt; {
 <p>Up next is another helper function, <code>combine_duration_parts</code>, this takes in two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>, the first will represent the date part and the second will represent the time part of our duration. Again this helper is mostly straight forward, it loops over both of, sets of parts (if they exist) and adds them all up into a <code>Duration</code>.</p>
 <p>Our last <code>named!</code> is the final step for combining all of our previous work. Again we start with a <code>do_parse!</code>, this one begins with a <code>tag!</code> for the first letter <code>P</code>, we pass the rest on to another <code>nom</code> macor <code>opt!</code>, this converts a standard parser into a one that returns an <code>Option</code>, we pass the first one another <code>many_m_n!</code> that will generate a <code>Vec&lt;DurationPart&gt;</code> with a length from one to four, assigning the result to a variable <code>date_parts</code>. It then passes the remainder of the text to another <code>opt!</code>, this one around <code>time_parts</code> ad assigns the result to a variable of the same name. Now we have the two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>s that we need to pass them along to the <code>combine_duration_parts</code> helper function.</p>
 <p>With all that we have finally built a <code>nom</code> parser that would take in our duration string and return a <code>Duration</code>. You will notice in the <code>parse</code> function that we actually call the last <code>named!</code> item manually providing the argument. This will always result in a <code>Result</code>, the <code>Ok</code> case for this result is going to be a pair, the first will be the remainder of the input, the second will be a <code>Duration</code>.</p>
-<!--web-only-end-->
-<!--slides-only-->
-<a class="header" href="#now-for-a-demo" id="now-for-a-demo"><h1>Now for a demo!</h1></a>
-<!--slides-only-end-->
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -288,6 +387,10 @@ enum DurationPart {
     Seconds(f32),
 }
 #}</code></pre></pre>
+<!--web-only-end-->
+<!--slides-only-->
+<a class="header" href="#now-for-a-demo" id="now-for-a-demo"><h1>Now for a demo!</h1></a>
+<!--slides-only-end-->
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
                     </main>
 
@@ -300,7 +403,7 @@ enum DurationPart {
                         
 
                         
-                            <a rel="next" href="../06.pest/intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../07.combine/intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -318,7 +421,7 @@ enum DurationPart {
                 
 
                 
-                    <a href="../06.pest/intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="../07.combine/intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

@@ -17,7 +17,7 @@ $web-only-end$
 $slides-only$
 - Full control
 - Nothing new to learn
-- Can be FAST
+- *Can* be fast
 $slides-only-end$
 ## Negatives
 
