@@ -15,3 +15,4 @@
 - [Stats](09.perf/perf.md)
 - [Combine Revisited](10.combine/intro.md)
     - [Parser](10.combine/src.md)
+- [Conclusion](11.conclusion/final.md)
