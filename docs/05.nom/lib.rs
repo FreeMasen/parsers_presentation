@@ -92,13 +92,3 @@ fn digit(c: char) -> bool {
 fn parse_float(s: CompleteStr) -> Result<f32, ::std::num::ParseFloatError> {
     s.parse()
 }
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
-}

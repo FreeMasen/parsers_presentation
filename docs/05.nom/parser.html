@@ -142,97 +142,27 @@
 <!--web-only-->
 <p>A good place to start when learning to use <code>nom</code> is the <code>named!</code> macro, this macro will create a function for you with a specific name and behavior. <code>named!</code> takes two arguments, the first is the function's name, this needs to include 2 generic arguments, the second is the function's body. This can be a little difficult to get used to but it isn't too much of a pain. The generic arguments provided with the name define the data type of the argument and return type respectively.</p>
 <p>This is already starting to feel difficult to explain, I will re-iterate one last time that the learning curve for <code>nom</code> is pretty steep.</p>
-<p>Just like with our grammar, let's start at the bottom and move up. The first <code>named!</code> entry we have in that direction is called <code>float</code>, which takes <code>CompleteStr</code> and returns <code>f32</code>. The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.</p>
+<p>Just like with our grammar, let's start at the bottom and move up. The first <code>named!</code> entry we have in that direction is called <code>float</code>, which takes <code>CompleteStr</code> and returns <code>f32</code>.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-extern crate duration;
-#[macro_use]
-extern crate nom;
-use nom::types::CompleteStr;
-use duration::Duration;
-pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
-    let pair = duration(s.into()).map_err(|e| format!(&quot;{}&quot;, e))?;
-    Ok(pair.1)
-}
-
-named!(duration&lt;CompleteStr, Duration&gt;,
-    do_parse!(
-        tag!(&quot;P&quot;) &gt;&gt;
-        date_parts: opt!(many_m_n!(1, 4, date_part)) &gt;&gt;
-        time_parts: opt!(time_parts) &gt;&gt;
-        (combine_duration_parts(date_parts, time_parts))
-    )
-);
-
-fn combine_duration_parts(date_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;, time_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;) -&gt; Duration {
-    let mut duration = Duration::new();
-    for part in date_parts.unwrap_or(Vec::new()).iter().chain(time_parts.unwrap_or(Vec::new()).iter()) {
-        match part {
-            DurationPart::Years(value) =&gt; duration.set_years(*value),
-            DurationPart::Months(value) =&gt; duration.set_months(*value),
-            DurationPart::Weeks(value) =&gt; duration.set_weeks(*value),
-            DurationPart::Days(value) =&gt; duration.set_days(*value),
-            DurationPart::Hours(value) =&gt; duration.set_hours(*value),
-            DurationPart::Minutes(value) =&gt; duration.set_minutes(*value),
-            DurationPart::Seconds(value) =&gt; duration.set_seconds(*value),
-        }
-    }
-    duration
-}
-
-named!(time_parts&lt;CompleteStr, Vec&lt;DurationPart&gt;&gt;,
-    do_parse!(
-        tag!(&quot;T&quot;) &gt;&gt;
-        time_parts: many_m_n!(1, 3, time_part) &gt;&gt;
-        (time_parts)
-    )
-);
-
-named!(date_part&lt;CompleteStr, DurationPart&gt;,
-    do_parse!(
-        part: duration_part &gt;&gt;
-        (combine_duration_part(part.0, part.1, false))
-    )
-);
-
-
-named!(time_part&lt;CompleteStr, DurationPart&gt;,
-    do_parse!(
-        part: duration_part &gt;&gt;
-        (combine_duration_part(part.0, part.1, true))
-    )
-);
-
-fn combine_duration_part(value: f32, flag: CompleteStr, is_time: bool) -&gt; DurationPart {
-    match *flag {
-        &quot;Y&quot; =&gt; DurationPart::Years(value),
-        &quot;M&quot; =&gt; if is_time {
-            DurationPart::Minutes(value)
-        } else {
-            DurationPart::Months(value)
-        },
-        &quot;W&quot; =&gt; DurationPart::Weeks(value),
-        &quot;D&quot; =&gt; DurationPart::Days(value),
-        &quot;H&quot; =&gt; DurationPart::Hours(value),
-        &quot;S&quot; =&gt; DurationPart::Seconds(value),
-        _ =&gt; unreachable!()
-    }
-}
-
-named!(duration_part&lt;CompleteStr, (f32, CompleteStr)&gt;,
-    do_parse!(
-        value: float &gt;&gt;
-        flag: take!(1) &gt;&gt;
-        (value, flag)
-    )
-);
-
-
 named!(float&lt;CompleteStr, f32&gt;,
     map_res!(take_while1!(digit), parse_float)
 );
-
+#}</code></pre></pre>
+<p>The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn float(i: CompleteStr) -&gt; Result&lt;f32, Error&gt; {
+    map_res!(take_while1!(i, digit), parse_float)
+}
+#}</code></pre></pre>
+<p>While the above is an extreme simplification, I hope it illustrates what is going on when we use the <code>named!</code> macro.</p>
+<p>To dig into the function body a little, we are using macros provided by <code>nom</code>, the first is <code>map_res!</code> which takes two arguments. The first argument is going to be a parser, this will capture some portion of the input, the second argument is a function that will take the result of the first argument's parsing and return a <code>Result</code>. The basic idea here is that we are going to map the output of a parser with the function, since the function might fail <code>map_res!</code> will convert the function's error case into a <code>nom</code> error. The first argument is <code>take_while1!</code>, another <code>nom</code> macro, this takes a function that takes 1 argument, this argument needs to be the smallest part of the input which for this would be a <code>char</code> the function then needs to return a boolean, indicating if that <code>char</code> matches what we are expecting. To flesh that our a little we should probably cover the two helper functions we are using <code>digit</code> and <code>parse_float</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
 fn digit(c: char) -&gt; bool {
     c.is_digit(10) || c == '.'
 }
@@ -240,25 +170,26 @@ fn digit(c: char) -&gt; bool {
 fn parse_float(s: CompleteStr) -&gt; Result&lt;f32, ::std::num::ParseFloatError&gt; {
     s.parse()
 }
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
-}
-fn float(i: CompleteStr) -&gt; Result&lt;f32, Error&gt; {
-    map_res!(take_while!(digit), parse_float)
-}
 #}</code></pre></pre>
-<p>While the above is an extreme simplification, I hope it illustrates what is going on when we use the <code>named!</code> macro.</p>
-<p>To dig into the function body a little, we are using two macros provided by <code>nom</code>, <code>map_res!</code> which takes a parser and a <code>Fn(I) -&gt; Result&lt;T, Error&gt;</code> where <code>I</code> is the input type, for us that would be <code>CompleteStr</code> and <code>T</code> is the return type which for this would be <code>f32</code>. The first argument we are using <code>take_while1!</code>, this is another <code>nom</code> macro the only argument it takes is a <code>Fn(B) -&gt; bool</code>, where <code>B</code> is the smallest part of the input, in our case that would be <code>char</code> since <code>CompleteStr</code> is a collection of <code>char</code>s. What this is going to do look at each <code>char</code> in the input and pass that to our test function, which checks to see if it is <code>0-9</code> or <code>.</code>, if it is one of those the <code>char</code> is added to the output, if not it stops and returns all of the <code>char</code>s it found as a <code>CompleteStr</code>. The last thing to note about this is that <code>take_whle1!</code> requires at least the first character it tries to be successful otherwise it fails. If we had the string <code>111.111D</code>, <code>take_while1!</code> would pull the first 7 characters ('111.111') off the front and return that.</p>
-<p>When we combine these two parts, <code>float</code> is going to pull 1 or more characters off the front of our input and then attempt to convert that into an <code>f32</code>, this will give us the value part of our <code>DurationUnit</code>.</p>
-<p>Moving up to the next <code>named!</code> we have <code>duration_part</code>, this takes a <code>CompleteStr</code> and returns a <code>(f32, CompleteStr)</code>. Looking at the body of <code>duration_part</code> we have another new <code>nom</code> macro <code>do_parse!</code>. This is a very powerful tool in the <code>nom</code> tool shed, <code>do_parse!</code> will take any number of parsers and apply them in sequence. We indicate the flow of the parsers using the <code>&gt;&gt;</code> operator, we can assign the result of any parse to a variable by putting that variable name and a colon before it. <code>do_parse!</code> requires the final item in your flow to be a tuple with the expected values. For the <code>duration_part</code> body, we first use the <code>float</code> parser, that will take all of the leading numbers off the front and convert them into an <code>f32</code> like we went over before. notice you are not calling <code>float()</code>, I'll get to that in just a moment. we are going to assign that <code>f32</code> to the variable <code>value</code>, once that is done we take the rest of our input and pass it to <code>nom</code>'s macro <code>take!</code>, which takes 1 argument of a <code>usize</code>. Similar to <code>take_while1!</code>, <code>take!</code> pulls stuff off the front of the input in the smallest parts possible, for us again that will be <code>char</code> but instead of using a function to test if we want a character it just takes the number of characters you passed in. For us this <code>take!</code> is just going to take 1 character.</p>
-<p>At this point, you may be asking yourself &quot;why does take! need to be called but float doesn't?&quot;, that is a great question. One of the things that is hardest to get used to is that all of the <code>nom</code> macros return functions, not values. To break this down a little <code>take!</code> doesn't return the character, it returns a function that returns the character.</p>
+<p>If we had the input <code>111.111H</code>, we would first use <code>take_while1</code> to pass each character to <code>digit</code>.</p>
+<table><thead><tr><th> 1 </th><th> 1 </th><th> 1 </th><th> . </th><th> 1 </th><th> 1 </th><th> 1 </th><th> H </th></tr></thead><tbody>
+<tr><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✗ </td></tr>
+</tbody></table>
+<p>that would leave us with <code>111.111</code>, this would get passed along to <code>parse_float</code>, which would just call the <code>parse</code> method on <code>&amp;str</code>. Since the <code>parse</code> method returns a result, this would work for the requirement of <code>map_res!</code>. Now that we have a way to parse
+the number part of our number + letter pairs, we can move on to the next use of <code>named!</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(duration_part&lt;CompleteStr, (f32, CompleteStr)&gt;,
+    do_parse!(
+        value: float &gt;&gt;
+        flag: take!(1) &gt;&gt;
+        (value, flag)
+    )
+);
+#}</code></pre></pre>
+<p>Here we have defined <code>duration_part</code> this will take us from a <code>CompleteStr</code> to a tuple with the type <code>(f32, CompleteStr)</code>, it does this by using the <code>do_parse!</code> macro. <code>do_parse!</code> is our primary way to declare a parsing pipeline, we provide it with a list of parsers and the remaining input should be applied to them in order. Here we see the use of a couple of custom syntax items. The first is how we store a parser's result in a variable, we do that by putting the variable name and a colon before the parser (<code>value: float</code>). The second bit of custom syntax is the <code>&gt;&gt;</code> operator, this essentially means, &quot;and then&quot;. To break down what we are doing here, first we are using the <code>float</code> parser defined above, once done with that pass any remaining input on to the parser <code>take!</code>, which doesn't look at the input, just takes the number of characters requested, in our case 1.</p>
+<p>At this point, you may be asking yourself &quot;why does take! need to be called but float doesn't?&quot;, that is a great question. One of the things that is hardest to get used to is that all of the <code>nom</code> macros return functions, not values. To break this down a little <code>take!</code> doesn't return the character, it returns a function that returns the character, it might look something like this.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -270,15 +201,100 @@ fn take(i: CompleteStr) -&gt; Result&lt;CompleteStr, Error&gt; {
     }
 }
 #}</code></pre></pre>
-<p>That means the result of <code>take!</code> can be called, just like the <code>float</code>.</p>
-<p>Moving along, we are assigning that single character string to the variable <code>flag</code>, we then end with the tuple <code>(value, flag)</code> which is of type <code>(f32, CompleteStr)</code>.</p>
-<p>So now we should be able to successfully to parse our duration's smallest parts. Now we need to figure out how to get that into our <code>DurationPart</code> enum. Then next item moving up the chain is the helper function <code>combine_duration_part</code> this is going to take in the two parts the <code>f32</code> value and the <code>flag</code> as well as a third argument to indicate if an <code>M</code> means minutes or months.</p>
+<p>That means the result of <code>take!</code> can be called, just like the <code>float</code>. To put it another way, we are not parsing the input, instead we are building a parser out of other parsers that will parse the input.</p>
+<p>To finish the explanation of this <code>do_parse!</code>, the last step in any use of <code>do_parse!</code> we need to have a tuple, this will be the return value, for us that is the tuple of <code>(value, flag)</code> which is of type <code>(f32, CompleteStr)</code>.</p>
+<p>At this point we should be able to parse a duration's smallest part. Now we need to figure out how to get that into our <code>DurationPart</code> enum. Then next item moving up the file is the helper function <code>combine_duration_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn combine_duration_part(value: f32, flag: CompleteStr, is_time: bool) -&gt; DurationPart {
+    match *flag {
+        &quot;Y&quot; =&gt; DurationPart::Years(value),
+        &quot;M&quot; =&gt; if is_time {
+            DurationPart::Minutes(value)
+        } else {
+            DurationPart::Months(value)
+        },
+        &quot;W&quot; =&gt; DurationPart::Weeks(value),
+        &quot;D&quot; =&gt; DurationPart::Days(value),
+        &quot;H&quot; =&gt; DurationPart::Hours(value),
+        &quot;S&quot; =&gt; DurationPart::Seconds(value),
+        _ =&gt; unreachable!()
+    }
+}
+#}</code></pre></pre>
+<p>This is going to take in the two parts the <code>f32</code> value and the <code>flag</code> as well as a third argument to indicate if an <code>M</code> means minutes or months.</p>
 <p>We are going to use this as we are building the two halves. The function itself is relatively simple, just a <code>match</code> statement on the flag, matching the appropriate letter to the duration part.</p>
-<p>As we move up the file, we have two more <code>named!</code> macros <code>date_part</code> and <code>time_part</code>. These are almost identical, essentially they use the <code>duration_part</code> to get first two arguments of <code>combine_duration_part</code>, it then provides the appropriate value for the third.</p>
-<p>As we continue up we have a <code>named!</code> item to parse the <code>time_parts</code>, here we have another call to <code>do_parse!</code> the first item here is is a call to <code>tag!</code>, another <code>nom</code> macro. This one simply recognizes whatever string you provide to it. In our case we are matching against the <code>T</code> that would begin the time section. It then moves on to another provided macro <code>many_m_n!</code>, this one takes three arguments, the first is the minimum number of times you expect something, the second is the maximum number of times you expect something, and the third is what you expect. In our case we expect a <code>time_part</code> at least 1 time, up to 3 times. We are going to assign the result of that to the variable <code>time_parts</code>, this value will be a <code>Vec&lt;DurationPart&gt;</code>. Since the last item in <code>do_parse!</code> needs to be a tuple, we wrap <code>time_parts</code> in one.</p>
-<p>Up next is another helper function, <code>combine_duration_parts</code>, this takes in two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>, the first will represent the date part and the second will represent the time part of our duration. Again this helper is mostly straight forward, it loops over both of, sets of parts (if they exist) and adds them all up into a <code>Duration</code>.</p>
-<p>Our last <code>named!</code> is the final step for combining all of our previous work. Again we start with a <code>do_parse!</code>, this one begins with a <code>tag!</code> for the first letter <code>P</code>, we pass the rest on to another <code>nom</code> macor <code>opt!</code>, this converts a standard parser into a one that returns an <code>Option</code>, we pass the first one another <code>many_m_n!</code> that will generate a <code>Vec&lt;DurationPart&gt;</code> with a length from one to four, assigning the result to a variable <code>date_parts</code>. It then passes the remainder of the text to another <code>opt!</code>, this one around <code>time_parts</code> ad assigns the result to a variable of the same name. Now we have the two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>s that we need to pass them along to the <code>combine_duration_parts</code> helper function.</p>
-<p>With all that we have finally built a <code>nom</code> parser that would take in our duration string and return a <code>Duration</code>. You will notice in the <code>parse</code> function that we actually call the last <code>named!</code> item manually providing the argument. This will always result in a <code>Result</code>, the <code>Ok</code> case for this result is going to be a pair, the first will be the remainder of the input, the second will be a <code>Duration</code>.</p>
+<p>As we move up the file, we have two more <code>named!</code> macros <code>date_part</code> and <code>time_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(date_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, false))
+    )
+);
+
+
+named!(time_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, true))
+    )
+);
+#}</code></pre></pre>
+<p>These are almost identical, essentially they use the <code>duration_part</code> to get first two arguments of <code>combine_duration_part</code>, it then provides the appropriate value for the third.</p>
+<p>As we continue up we have a <code>named!</code> item to parse the <code>time_parts</code>,</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(time_parts&lt;CompleteStr, Vec&lt;DurationPart&gt;&gt;,
+    do_parse!(
+        tag!(&quot;T&quot;) &gt;&gt;
+        time_parts: many_m_n!(1, 3, time_part) &gt;&gt;
+        (time_parts)
+    )
+);
+#}</code></pre></pre>
+<p>Here we have another call to <code>do_parse!</code> the first item here is is a call to <code>tag!</code>, another <code>nom</code> macro. This one simply recognizes whatever string you provide to it. In our case we are matching against the <code>T</code> that would begin the time section. It then moves on to another provided macro <code>many_m_n!</code>, this one takes three arguments, the first is the minimum number of times you expect something, the second is the maximum number of times you expect something, and the third is what you expect. In our case we expect a <code>time_part</code> at least 1 time, up to 3 times. We are going to assign the result of that to the variable <code>time_parts</code>, this value will be a <code>Vec&lt;DurationPart&gt;</code>. Since the last item in <code>do_parse!</code> needs to be a tuple, we wrap <code>time_parts</code> in parentheses.</p>
+<p>Up next is another helper function, <code>combine_duration_parts</code></p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn combine_duration_parts(date_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;, time_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;) -&gt; Duration {
+    let mut duration = Duration::new();
+    for part in date_parts.unwrap_or(Vec::new()).iter().chain(time_parts.unwrap_or(Vec::new()).iter()) {
+        match part {
+            DurationPart::Years(value) =&gt; duration.set_years(*value),
+            DurationPart::Months(value) =&gt; duration.set_months(*value),
+            DurationPart::Weeks(value) =&gt; duration.set_weeks(*value),
+            DurationPart::Days(value) =&gt; duration.set_days(*value),
+            DurationPart::Hours(value) =&gt; duration.set_hours(*value),
+            DurationPart::Minutes(value) =&gt; duration.set_minutes(*value),
+            DurationPart::Seconds(value) =&gt; duration.set_seconds(*value),
+        }
+    }
+    duration
+}
+#}</code></pre></pre>
+<p>This takes in two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>, the first will represent the date part and the second will represent the time part of our duration. Again this helper is mostly straight forward, it loops over both, sets of parts (if they exist) and adds them all up into a <code>Duration</code>.</p>
+<p>Our last <code>named!</code> is the final step for combining all of our previous work.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(duration&lt;CompleteStr, Duration&gt;,
+    do_parse!(
+        tag!(&quot;P&quot;) &gt;&gt;
+        date_parts: opt!(many_m_n!(1, 4, date_part)) &gt;&gt;
+        time_parts: opt!(time_parts) &gt;&gt;
+        (combine_duration_parts(date_parts, time_parts))
+    )
+);
+#}</code></pre></pre>
+<p>Again we start with a <code>do_parse!</code>, this one begins with a <code>tag!</code> for the first letter <code>P</code>, we pass the rest on to another <code>nom</code> macor <code>opt!</code>, this converts a standard parser into a one that returns an <code>Option</code>, we pass the first one another <code>many_m_n!</code> that will generate a <code>Vec&lt;DurationPart&gt;</code> with a length from one to four, assigning the result to a variable <code>date_parts</code>. It then passes the remainder of the text to another <code>opt!</code>, this one around <code>time_parts</code> and assigns the result to a variable of the same name. Now we have the two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>s that we need to pass them along to the <code>combine_duration_parts</code> helper function.</p>
+<p>With all that we have finally built a <code>nom</code> parser that would take in our duration string and return a <code>Duration</code>. You will notice in the <code>parse</code> function that we actually call the last <code>named!</code> item manually providing the argument. <code>nom</code> parsers always return a <code>Result</code>, the <code>Ok</code> case for this result is going to be a tuple, the first index will be the remainder of the input, the second will be a <code>Duration</code>.</p>
+<p>You can find the whole parser file below.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -375,16 +391,6 @@ fn digit(c: char) -&gt; bool {
 
 fn parse_float(s: CompleteStr) -&gt; Result&lt;f32, ::std::num::ParseFloatError&gt; {
     s.parse()
-}
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
 }
 #}</code></pre></pre>
 <!--web-only-end-->

@@ -148,15 +148,135 @@ fn float&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = f32&gt;
 where
     I: Stream&lt;Item = char&gt;,
     I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        many1(digit()),
+        optional((
+            char('.'),
+            many1::&lt;String, _&gt;(digit())
+        ))
+    ).map(|(int, rem)| {
+        let f = if let Some(rem) = rem {
+            format!(&quot;{}.{}&quot;, int, rem.1)
+        } else {
+            int
+        };
+        f.parse().unwrap()
+    })
+}
 #}</code></pre></pre>
 <p>We are saying that this function will return a parser who's input is of type <code>I</code> and output is an <code>f32</code>. Additionally we constrain <code>I</code> saying it needs to implement <code>Stream</code>, where the <code>Item</code> type is a <code>char</code>, and the <code>Error</code> type of <code>I</code> needs to implement <code>ParseError</code>. <code>ParseError</code> is also generic so we pass along the properties of <code>I</code>, <code>Item</code>, <code>Range</code>, and <code>Position</code>. This is pretty verbose, but I found that building a simple parser I didn't need to worry a ton about what it meant, instead just using it as a blueprint for all of my parser functions. That is to say, I just copied and pasted this whenever I wanted to add another parser to a source file.</p>
-<p>One thing to keep in mind is that these functions are not parsing the input but returning a struct that will be able to parse the input. We define these structs by combining them together and mapping over the result if successful. To indicate that parsers are chained together in a sequence we wrap them in either an array if they are all the exact same type otherwise we would use a tuple. Looking at the body of <code>float</code> we are using a tuple, with two parers inside it. The first parser is <code>many1</code> this takes a parser as an argument and applies it a minimum of 1 times but will collect the results until in argument parser fails, we passed in the result of calling <code>digit</code> which is a parser that will get us a single digit number. Next we have <code>optional</code> this takes in a parser and wraps the result in an <code>Option</code>, we pass it a tuple of 2 parsers the <code>char</code> parser, this is a single character and another <code>many1</code> with <code>digit</code> as its argument. Notice in this second call to <code>many1</code> we included a type annotation, <code>many1</code> operates similar to the <code>collect</code> method on an <code>iterator</code>, the result could be a number of different collections we are just telling it it should be a <code>String</code>.</p>
-<p>We now call <code>map</code> on our tuple, this essentially is saying if you find the pattern we defined, call this closure to generate the result. In this closure we are going to check and see if the remainder exists and coalesce that into a string with the integer portion if not just use the integer portion. We then call <code>str::parse</code> on that coalesced value.</p>
-<p>Moving up the file we next see <code>value_pair</code> the signature is similar to <code>float</code> though the <code>Output</code> type is <code>DurationPart</code> and it takes in an argument <code>time</code> to determine if <code>M</code> is a minute or a month. Again here we have a tuple, the first parser is the <code>float</code> parser we just defined, next is a <code>choice</code> parser, this takes in an array or tuple of parsers and tries each one starting at the top, stopping at the first successful. We have passed <code>choice</code> an array of <code>char</code> parsers with our unit characters. We map our tuple, this time our closure has the <code>move</code> keyword to take ownership of the <code>time</code> argument. We have annotated the argument to our closure to help the compiler figure out what we are trying to do here. <code>map</code> on a parser always takes 1 argument, this will be a tuple of the results, for us that is <code>f32</code> and <code>char</code>. We simply match on the <code>char</code> and generate the correct <code>DurationPart</code> variant as per the letter and the time flag.</p>
-<p>Next we have the <code>time_part</code> parser, here we have another tuple, the first parser is a call to <code>char</code> with our <code>T</code> indicator that this is time based values, the second is a <code>many1</code> call to the <code>value_pair</code> parser we just defined, passing <code>true</code> for the <code>time</code> flag. The map here is simply discarding the <code>T</code> character, that make the <code>Output</code> type annotation work for <code>p</code> which means it also work for <code>many1</code>.</p>
-<p>After <code>time_part</code> we have <code>date_part</code> this one is just the <code>many1</code> call to <code>value_pair</code> passing <code>false</code> for the <code>time</code> flag.</p>
-<p>The last of the parsers we are going to define is <code>duration</code>, this is another tuple indicating the sequence of a <code>char</code> of <code>P</code> followed by an <code>optional</code> <code>date_part</code> followed by an <code>optional</code> <code>time_part</code>. We <code>map</code> that, the argument to the <code>map</code> closure would be <code>(char, Option&lt;Vec&lt;DurationPart&gt;&gt;, Option&lt;Vec&lt;DurationPart&gt;&gt;)</code>. In the body we loop over those two <code>Vec</code>s if they exist, adding them to a <code>Duration</code> returning the result.</p>
-<p>In our <code>parse</code> function we create a <code>Duration</code> parser by calling <code>duration</code> and then pass a <code>&amp;str</code> to the <code>parse</code> method, this is one of the methods defined on the <code>Parser</code> trait. <code>Parse</code> returns a <code>Result</code> and in the <code>Ok</code> position we have a tuple, the first item has the same type as <code>Output</code> and the second is the remaining input to parse. For us the <code>Output</code> is going to be a <code>Duration</code> so we return <code>Ok(d.0)</code></p>
+<p>One thing to keep in mind is that these functions are not parsing the input but returning a parser that will be able to parse the input. We define these by combining them together and mapping over the result if successful. To indicate that parsers are chained together in a sequence we wrap them in either an array if they are all the exact same type otherwise we would use a tuple. Looking at the body of <code>float</code> we are using a tuple, with two parsers inside it. The first parser is <code>many1</code> this takes a parser as an argument and applies it a minimum of 1 times but will collect the results until in argument parser fails, we passed in the result of calling <code>digit</code> which is a parser that will get us a single digit number. Next we have <code>optional</code> this takes in a parser and wraps the result in an <code>Option</code>, we pass it a tuple of 2 parsers the <code>char</code> parser, this is a single character and another <code>many1</code> with <code>digit</code> as its argument. Notice in this second call to <code>many1</code> we included a type annotation, <code>many1</code> operates similar to the <code>collect</code> method on an <code>iterator</code>, the result could be a number of different collections we are just telling it it should be a <code>String</code>.</p>
+<p>We now call <code>map</code> on our tuple, this essentially is saying if you find the pattern we defined, call this closure to generate the <code>Output</code>. In this closure we are going to check and see if the remainder exists and coalesce that into a string with the integer portion if not just use the integer portion. We then call <code>str::parse</code> on that coalesced value.</p>
+<p>Moving up the file we next see <code>value_pair</code> the signature is similar to <code>float</code> though the <code>Output</code> type is <code>DurationPart</code> and it takes in an argument <code>time</code> to determine if <code>M</code> is a minute or a month.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn value_pair&lt;I&gt;(time: bool) -&gt; impl Parser&lt;Input = I, Output = DurationPart&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        float(),
+        choice([
+            char('Y'),
+            char('M'),
+            char('W'),
+            char('D'),
+            char('H'),
+            char('S'),
+        ])).map(move |(v, c): (f32, char)| {
+            match c {
+                'Y' =&gt; DurationPart::Years(v),
+                'M' =&gt; if time {
+                    DurationPart::Minutes(v)
+                } else {
+                    DurationPart::Months(v)
+                },
+                'W' =&gt; DurationPart::Weeks(v),
+                'D' =&gt; DurationPart::Days(v),
+                'H' =&gt; DurationPart::Hours(v),
+                'S' =&gt; DurationPart::Seconds(v),
+                _ =&gt; unreachable!()
+            }
+        })
+}
+#}</code></pre></pre>
+<p>Again here we have a tuple, the first parser is the <code>float</code> parser we just defined, next is a <code>choice</code> parser, this takes in an array or tuple of parsers and tries each one starting at the top, stopping at the first successful. We have passed <code>choice</code> an array of <code>char</code> parsers with our unit characters. We map our tuple, this time our closure has the <code>move</code> keyword to take ownership of the <code>time</code> argument. We have annotated the argument to our closure to help the compiler figure out what we are trying to do here. <code>map</code> on a parser always takes 1 argument, this will be a tuple of the results, for us that is <code>f32</code> and <code>char</code>. We simply match on the <code>char</code> and generate the correct <code>DurationPart</code> variant as per the letter and the time flag.</p>
+<p>Next we have the <code>time_part</code> parser.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn time_part&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Vec&lt;DurationPart&gt;&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        char('T'),
+        many1(value_pair(true))
+    ).map(|(_, p)| p)
+}
+#}</code></pre></pre>
+<p>Here we have another tuple, the first parser is a call to <code>char</code> with our <code>T</code> indicator that this is time based values, the second is a <code>many1</code> call to the <code>value_pair</code> parser we just defined, passing <code>true</code> for the <code>time</code> flag. The map here is simply discarding the <code>T</code> character, that make the <code>Output</code> type annotation work for <code>p</code> which means it also work for <code>many1</code>.</p>
+<p>After <code>time_part</code> we have <code>date_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn date_part&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Vec&lt;DurationPart&gt;&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        many1(value_pair(false))
+    )
+}
+#}</code></pre></pre>
+<p>This one is just the <code>many1</code> call to <code>value_pair</code> passing <code>false</code> for the <code>time</code> flag. Notice that we don't need a <code>map</code> here since no additional changes need to be made to match the <code>Output</code>.</p>
+<p>The last of the parsers we are going to define is <code>duration</code></p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn duration&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Duration&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        char('P'),
+        optional(date_part()),
+        optional(time_part()),
+    ).map(|(_, d, t)| {
+        let mut ret = Duration::new();
+        for part in d.unwrap_or(Vec::new()).iter().chain(t.unwrap_or(Vec::new()).iter()) {
+            match part {
+                DurationPart::Years(v) =&gt; ret.set_years(*v),
+                DurationPart::Months(v) =&gt; ret.set_months(*v),
+                DurationPart::Weeks(v) =&gt; ret.set_weeks(*v),
+                DurationPart::Days(v) =&gt; ret.set_days(*v),
+                DurationPart::Hours(v) =&gt; ret.set_hours(*v),
+                DurationPart::Minutes(v) =&gt; ret.set_minutes(*v),
+                DurationPart::Seconds(v) =&gt; ret.set_seconds(*v),
+            }
+        }
+        ret
+    })
+}
+#}</code></pre></pre>
+<p>This is another tuple indicating the sequence of a <code>char</code> of <code>P</code> followed by an <code>optional</code> <code>date_part</code> followed by an <code>optional</code> <code>time_part</code>. The argument to the <code>map</code> closure would be of type <code>(char, Option&lt;Vec&lt;DurationPart&gt;&gt;, Option&lt;Vec&lt;DurationPart&gt;&gt;)</code>. In the body we loop over those two <code>Vec</code>s if they exist, adding them to a <code>Duration</code> returning the result.</p>
+<p>Finally there is the <code>parse</code> function.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let d = duration().parse(s).map_err(|e| format!(&quot;{}&quot;, e))?;
+    Ok(d.0)
+}
+#}</code></pre></pre>
+<p>Which creates a <code>Duration</code> parser by calling <code>duration</code> and then passes a <code>&amp;str</code> to the <code>parse</code> method, this is one of the methods defined on the <code>Parser</code> trait. <code>Parse</code> returns a <code>Result</code> and in the <code>Ok</code> position we have a tuple, the first item has the same type as <code>Output</code> and the second is the remaining input to parse. For us the <code>Output</code> is going to be a <code>Duration</code> so we return <code>Ok(d.0)</code></p>
+<p>Here is the full source file for the <code>combine</code> parser.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {

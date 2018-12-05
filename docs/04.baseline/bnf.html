@@ -140,90 +140,138 @@
 </style>
 <a class="header" href="#bnf-grammar" id="bnf-grammar"><h1>BNF Grammar</h1></a>
 <!--web-only-->
-<p>Another thing that will prove useful if you are interested in getting started with parsing
-is to understand that there are languages out there for talking about languages. The overall structure
-of any format is called a grammar, when explaining the structure of a format it is helpful to have
-method to communicate it. One option is to use the Backus-Naur Form (BNF), if you scroll down you will find the ISO 8601 Duration specification written in the BNF.</p>
-<p>For those unfamiliar with grammar forms, they consist of a series of rules, the left side of a rule is a name, the right side is a description of what that rule means, they are separated by <code>::=</code> in BNF.</p>
-<p>I find it easiest to read a grammar from the bottom up. Using the example below we have the <code>digit</code> rule, on the right side of this rule we see each number from 0 to 9 separated by a <code>|</code>, which here means <em>or</em>, so a digit is a single digit number from 0 through 9. Next we have the <code>integer</code> rule, this is either an <code>integer</code> followed by a <code>digit</code> or &quot;&quot;. This is where things can get a little confusing, To illustrate that something has a possibly, infinite length, grammars typically use this kind of notation.</p>
-<p>To me, this style of notation feels backwards, lets use the example <code>999</code>. If you think about it starting with the right most <code>9</code>, you would assign that position <code>&lt;integer&gt;&lt;digit&gt;</code>, the <code>&lt;integer&gt;</code> here would point to the middle <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code> and again the first <code>&lt;integer&gt;</code> would represent the left most <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code>, but the first <code>&lt;integer&gt;</code> in this case would be assigned <code>&quot;&quot;</code>. Here is a little flow chart to hopefully help visualize what I am trying to say.</p>
-<pre><code class="language-xml">&lt;integer&gt; = &quot;&quot;
-    ┗━━━━━━┓
+<p>At this point I want to take a moment and cover the concept of language grammars.
+In my experience most parsing resources will assume that you have at least
+a little knowledge about the concept making these resources difficult to use if
+you don't. If you already know a bit about language grammars, feel free to skip
+this page.</p>
+<p>Essentially grammars are a way to write a definition for a language with the
+goal of making it easier to talk about that language. I am using the term
+language here pretty broadly to mean any agreed upon data format. That means that
+the 8601 Duration format could be thought of as a language though most people would
+not consider it one.</p>
+<p>There are many options to choose from when trying to document a grammar,
+just like there are many language options to choose from when building software.
+I am going to use the Backus-Naur Form (BNF). We will going to walk through
+a BNF grammar describing the ISO 8601 Duration format piece by piece but
+if you wanted to look at the full thing you can scroll to the bottom of this page.</p>
+<p>For those unfamiliar with grammar forms, they consist of a series of rules,
+the left side of a rule is a name, the right side is a description of what
+that rule means, in BNF the sides are separated by <code>::=</code>.</p>
+<p>I find it easiest to read a grammar from the bottom up. For our duration format
+we would start with the rule <code>digit</code></p>
+<pre><code class="language-xml">&lt;digit&gt;       ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+</code></pre>
+<p>On the right side of this rule we see each number from 0 to 9 separated by a
+<code>|</code>, which here means <em>or</em>, so a digit is a single digit number from 0
+through 9. Next we have the <code>integer</code> rule.</p>
+<pre><code class="language-xml">&lt;integer&gt;     ::= &lt;digit&gt; | &lt;integer&gt;&lt;digit&gt;
+</code></pre>
+<p>An <code>integer</code> is either a single digit or an <code>integer</code> followed by a <code>digit</code>.
+This is where things can get a little confusing as this style of
+notation might feel backwards, at least it does to me. Lets use the
+example <code>999</code>, if you think about it starting with the right most <code>9</code>,
+you would assign that position <code>&lt;integer&gt;&lt;digit&gt;</code>, the <code>&lt;integer&gt;</code> here
+would point to the middle <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code>
+and again the <code>&lt;integer&gt;</code> would represent the left most <code>9</code>, this would
+finally be assigned <code>&lt;digit&gt;</code>. Here is a little flow chart to hopefully
+help visualize what I am trying to say.</p>
+<pre><code class="language-xml">&lt;integer&gt; = 9
+    ┗━━━━━━━━━━━┓
 &lt;integer&gt; = &lt;integer&gt;9
-    ┗━━━━━━┓
-&lt;integer&gt; = &lt;integer&gt;9
-    ┗━━━━━━┓
+    ┗━━━━━━━━━━━┓
 &lt;integer&gt; = &lt;integer&gt;9
 </code></pre>
-<p>When the right side of a rule looks like this it is referred to as a &quot;recursive&quot; rule. Moving up the grammar, next we have the <code>remainder</code> rule, this is either a <code>.</code> followed by an <code>integer</code> or nothing. Next up we have <code>number</code> which either an <code>integer</code> or a <code>remainder</code> or an <code>integer</code> followed by a <code>remainder</code>.</p>
-<p>The next few rules are our units, you will notice that there are two rules for each unit this is because need to have two versions, one non-optional and one optional. Each of the rules is a <code>number</code> followed by the specific unit's character, the optional version is just the normal version or nothing.</p>
-<p>After our units we have the two halves of our duration, the <code>time-length</code> and the <code>date-length</code>, notice that we again have the optional version of each. These rules are almost identical in structure, the only difference is the units that are included. Using the <code>date-length</code> as an example, we have 4 options in each option one of the units is not optional. so a date-length is one of the following</p>
-<ul>
-<li>first
-<ul>
-<li>optional year</li>
-<li>optional month</li>
-<li>optional week</li>
-<li>day</li>
-</ul>
-</li>
-<li>second
-<ul>
-<li>optional year</li>
-<li>optional month</li>
-<li>week</li>
-<li>optional day</li>
-</ul>
-</li>
-<li>third
-<ul>
-<li>optional year</li>
-<li>month</li>
-<li>optional week</li>
-<li>optional day</li>
-</ul>
-</li>
-<li>fourth
-<ul>
-<li>year</li>
-<li>optional month</li>
-<li>optional week</li>
-<li>optional day
-This is because one unit is always required for a date-length. The same applies to the <code>time-length</code> rule, the only difference is that the <code>time-length</code> starts with a <code>T</code>.</li>
-</ul>
-</li>
-</ul>
-<p>Finally we have the <code>duration</code> rule, this is the letter <code>P</code> followed by either an optional <code>date-length</code> and a <code>time-length</code> or a <code>date-length</code> followed by an optional <code>time-length</code>, again both items are optional but at least one must be included.</p>
-<p>With that out of the way, let's dig into each of our options a little more.</p>
+<p>When the right side of a rule looks like this it is referred to as a
+&quot;left recursive&quot; rule. In this case we could also write it as <code>&lt;digit&gt;&lt;integer&gt;</code> making it &quot;right recursive&quot;. The more important take away is that if you see a
+rule in its own definition then it <em>could</em> go on forever in one direction or the other.</p>
+<p>Moving up the grammar, next we have the <code>remainder</code> rule.</p>
+<pre><code class="language-xml">&lt;remainder&gt;   ::= .&lt;integer&gt;
+</code></pre>
+<p>This rule is defined by a <code>.</code> followed by an <code>integer</code>. At this point it
+should become clear that as we move up the grammar, each rule will combine
+the previous rules, possibly with some additions which is why I like to
+start from the bottom. Next up we have <code>number</code>.</p>
+<pre><code class="language-xml">&lt;number&gt;      ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
+</code></pre>
+<p>A <code>number</code> is either an <code>integer</code> or a <code>remainder</code> or an <code>integer</code> followed
+by a <code>remainder</code>. This is a bit verbose but essentially we need a way
+to say that both are optional but at least one must exist. So <code>0</code> would
+work, also <code>.877</code> would work and finally <code>0.877</code> would work.</p>
+<p>The next few rules finally start to get into the specifics of the format.
+There are two rules for each of our number + letter pairs. Since we are
+using BNF the only operator we get is the <code>|</code> for or, some other grammar
+notations use other operators to make things a little more concise. If you have
+ever written a regular expression, you would be familiar with the <code>+</code> or <code>?</code>
+operators for declaring recursion or optional values. In BNF we are required
+to create a new rule for the optional case if we want to have both optional
+and non-optional. Take the <code>seconds</code> and <code>seconds-opt</code> rules as an example.</p>
+<pre><code class="language-xml">&lt;seconds-opt&gt; ::= &lt;seconds&gt; | &quot;&quot;
+&lt;seconds&gt;     ::= &lt;number&gt;S
+</code></pre>
+<p>The bottom one fits with what we went over on the previous page, a number
+followed by the capital letter <code>S</code>. The top one is just a way to make the
+previous rule optional. There is an entry like the above for each of our
+duration parts. After those we get to the <code>time</code> rule, this rule will
+hopefully make it clear why we needed those optional rules.</p>
+<pre><code class="language-xml">&lt;time&gt;        ::= T&lt;hours-opt&gt;&lt;minths-opt&gt;&lt;seconds&gt; |
+                  T&lt;hours-opt&gt;&lt;minths&gt;&lt;seconds-opt&gt; |
+                  T&lt;hours&gt;&lt;minths-opt&gt;&lt;seconds-opt&gt;
+</code></pre>
+<blockquote>
+<p>minth is used here as both <code>M</code>onth and <code>M</code>inute</p>
+</blockquote>
+<p>This rule has 3 options, all three start with the letter <code>T</code> and each is
+followed by all 3 of the time rules, in each case one of the time rules
+is not optional. This is saying that each of these parts can be optional
+but not all of them can be absent. So <code>T1H</code> or <code>T2M1S</code> are okay but <code>T</code>
+is not a valid <code>time</code>. Skipping ahead to the <code>date</code> rule we see a similar
+pattern.</p>
+<pre><code class="language-xml">&lt;date&gt;        ::= &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
+                  &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
+                  &lt;years-opt&gt;&lt;minths&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
+                  &lt;years&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
+</code></pre>
+<p>So a <code>date</code> can be <code>1D</code> or <code>1M1W</code> but couldn't just be empty. You might
+have noticed that we again have an optional version of <code>time</code>, just
+like we did for the duration unit rules. When we look at the <code>duration</code>
+rule, the top rule in the grammar, it should become clears as to why.</p>
+<pre><code class="language-xml">&lt;duration&gt;    ::= P&lt;date-length&gt;&lt;time-length-opt&gt; |
+                  P&lt;time-length&gt;
+</code></pre>
+<p>As we covered in the previous page, durations can have from 1 to 7
+number letter pairs. So this rule is saying that we can have a duration
+only with a date part (<code>P1M</code>) or a date part and a time part time part
+(<code>P1DT1H</code>) or just a time part(<code>PT1S</code>) but it cannot be empty (<code>P</code>).</p>
+<p>If you haven't already below is the full BNF grammar I wrote for this
+the ISO 8601 Duration format.</p>
 <!--web-only-end-->
-<pre><code class="language-xml">&lt;duration&gt;              ::= P &lt;date-length-opt&gt;&lt;time-length&gt; |
-                            P &lt;date-length&gt;&lt;time-length-opt&gt;
-&lt;date-length-opt&gt;       ::= &lt;date-length&gt; | &quot;&quot;
-&lt;date-length&gt;           ::= &lt;years-opt&gt;&lt;months-or-minutes-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
-                            &lt;years-opt&gt;&lt;months-or-minutes-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
-                            &lt;years-opt&gt;&lt;months-or-minutes&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
-                            &lt;years&gt;&lt;months-or-minutes-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
-&lt;time-length-opt&gt;       ::= &lt;time-length&gt; | &quot;&quot;
-&lt;time-length&gt;           ::= T&lt;hours-opt&gt;&lt;months-or-minutes-opt&gt;&lt;seconds&gt; |
-                            T&lt;hours-opt&gt;&lt;months-or-minutes&gt;&lt;seconds-opt&gt; |
-                            T&lt;hours&gt;&lt;months-or-minutes-opt&gt;&lt;seconds-opt&gt;
-&lt;years-opt&gt;             ::= &lt;years&gt; | &quot;&quot;
-&lt;years&gt;                 ::= &lt;number&gt;Y
-&lt;months-or-minutes-opt&gt; ::= &lt;months-or-minutes&gt; | &quot;&quot;
-&lt;months-or-minutes&gt;     ::= &lt;number&gt;M
-&lt;weeks-opt&gt;             ::= &lt;weeks&gt; | &quot;&quot;
-&lt;weeks&gt;                 ::= &lt;number&gt;W
-&lt;days-opt&gt;              ::= &lt;days&gt; | &quot;&quot;
-&lt;days&gt;                  ::= &lt;number&gt;D
-&lt;hours-opt&gt;             ::= &lt;hours&gt; | &quot;&quot;
-&lt;hours&gt;                 ::= &lt;number&gt;H
-&lt;seconds-opt&gt;           ::= &lt;seconds&gt; | &quot;&quot;
-&lt;seconds&gt;               ::= &lt;number&gt;S
-&lt;number&gt;                ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
-&lt;remainder&gt;             ::= .&lt;integer&gt; | &quot;&quot;
-&lt;integer&gt;               ::= &lt;integer&gt;&lt;digit&gt; | &quot;&quot;
-&lt;digit&gt;               ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-
+<pre><code class="language-xml">&lt;duration&gt;    ::= P&lt;date-length&gt;&lt;time-length-opt&gt; |
+                  P&lt;time-length&gt;
+&lt;date&gt;        ::= &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
+                  &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
+                  &lt;years-opt&gt;&lt;minths&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
+                  &lt;years&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
+&lt;time-opt&gt;    ::= &lt;time-length&gt; | &quot;&quot;
+&lt;time&gt;        ::= T&lt;hours-opt&gt;&lt;minths-opt&gt;&lt;seconds&gt; |
+                  T&lt;hours-opt&gt;&lt;minths&gt;&lt;seconds-opt&gt; |
+                  T&lt;hours&gt;&lt;minths-opt&gt;&lt;seconds-opt&gt;
+&lt;years-opt&gt;   ::= &lt;years&gt; | &quot;&quot;
+&lt;years&gt;       ::= &lt;number&gt;Y
+&lt;minths-opt&gt;  ::= &lt;months-or-minutes&gt; | &quot;&quot;
+&lt;minths&gt;      ::= &lt;number&gt;M
+&lt;weeks-opt&gt;   ::= &lt;weeks&gt; | &quot;&quot;
+&lt;weeks&gt;       ::= &lt;number&gt;W
+&lt;days-opt&gt;    ::= &lt;days&gt; | &quot;&quot;
+&lt;days&gt;        ::= &lt;number&gt;D
+&lt;hours-opt&gt;   ::= &lt;hours&gt; | &quot;&quot;
+&lt;hours&gt;       ::= &lt;number&gt;H
+&lt;seconds-opt&gt; ::= &lt;seconds&gt; | &quot;&quot;
+&lt;seconds&gt;     ::= &lt;number&gt;S
+&lt;number&gt;      ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
+&lt;remainder&gt;   ::= .&lt;integer&gt;
+&lt;integer&gt;     ::= &lt;digit&gt; | &lt;integer&gt;&lt;digit&gt;
+&lt;digit&gt;       ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 </code></pre>
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script>
                     </main>

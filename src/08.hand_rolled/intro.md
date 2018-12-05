@@ -22,7 +22,7 @@ $slides-only-end$
 ## Negatives
 
 $web-only$
-The biggest negative is that you are going to, at least to some extent, re-invent the wheel. The maintainers of the three crates I have covered are focusing their energy on building a quality base for you to build on, if you built that base yourself would it be as solid? The other big issue with the DIY approach is that you are going to introduce a significant amount of complexity to your solution and complexity is synonym for risk in most cases.
+The biggest negative is that you are going to, at least to some extent, re-invent the wheel. The maintainers of the three crates I have covered are focusing their energy on building a quality base for you to build on, if you built that base yourself would it be as solid? The other big issue with the DIY approach is that you are going to introduce a significant amount of complexity to your solution and complexity is often a synonym for risk.
 
 $web-only-end$
 $slides-only$

@@ -1,0 +1,26 @@
+<duration>    ::= P<date-length><time-length-opt> |
+                  P<time-length>
+<date>        ::= <years-opt><minths-opt><weeks-opt><days> |
+                  <years-opt><minths-opt><weeks><days-opt> |
+                  <years-opt><minths><weeks-opt><days-opt> |
+                  <years><minths-opt><weeks-opt><days-opt>
+<time-opt>    ::= <time-length> | ""
+<time>        ::= T<hours-opt><minths-opt><seconds> |
+                  T<hours-opt><minths><seconds-opt> |
+                  T<hours><minths-opt><seconds-opt>
+<years-opt>   ::= <years> | ""
+<years>       ::= <number>Y
+<minths-opt>  ::= <months-or-minutes> | ""
+<minths>      ::= <number>M
+<weeks-opt>   ::= <weeks> | ""
+<weeks>       ::= <number>W
+<days-opt>    ::= <days> | ""
+<days>        ::= <number>D
+<hours-opt>   ::= <hours> | ""
+<hours>       ::= <number>H
+<seconds-opt> ::= <seconds> | ""
+<seconds>     ::= <number>S
+<number>      ::= <integer> | <remainder> | <integer><remainder>
+<remainder>   ::= .<integer>
+<integer>     ::= <digit> | <integer><digit>
+<digit>       ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9

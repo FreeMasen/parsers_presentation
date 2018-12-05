@@ -141,7 +141,7 @@
 <a class="header" href="#performance" id="performance"><h1>Performance</h1></a>
 <!--web-only-->
 <p>Below you will find a table of benchmark information for each of the 4
-implementations. There are two benchmarks for each implementation, the first is parsing just 1 duration, the second is parsing 1000 durations. For the <a href="#build-time">build time</a> and <a href="#build-size">build size</a> benchmarks, I used the following binary application with feature flags to conditionally use each of the implementations.</p>
+implementations. There are two benchmarks for each implementation, the first is parsing just 1 duration, the second is parsing 1000 durations, these are all created using <code>lazy_static</code> so each parser is provided the same input. For the <a href="#build-time">build time</a> and <a href="#build-size">build size</a> benchmarks, I used the following binary application with feature flags to conditionally use each of the implementations.</p>
 <pre><pre class="playpen"><code class="language-rust">extern crate duration;
 extern crate random_durations;
 #[cfg(all(feature = &quot;nom&quot;, not(feature = &quot;bench&quot;)))]
@@ -191,6 +191,95 @@ fn get_count() -&gt; usize {
 <p>This is the time <code>cargo +nightly bench</code> reported for this parser to parse 1 duration.</p>
 <a class="header" href="#parse-1000" id="parse-1000"><h3>Parse 1000</h3></a>
 <p>This is the time <code>cargo +nightly bench</code> reported for this parser to parse 1000 durations.</p>
+<a class="header" href="#benches" id="benches"><h3>Benches</h3></a>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(test)]
+
+#fn main() {
+extern crate test;
+extern crate duration;
+extern crate random_durations;
+#[cfg(feature = &quot;nom&quot;)]
+extern crate nom_duration_parser;
+#[cfg(feature = &quot;pest&quot;)]
+extern crate pest_duration_parser;
+#[cfg(feature = &quot;combine&quot;)]
+extern crate combine_duration_parser;
+#[cfg(feature = &quot;hand&quot;)]
+extern crate hand_rolled_duration_parser;
+#[macro_use]
+extern crate lazy_static;
+
+use test::{Bencher, black_box};
+use duration::Duration;
+
+lazy_static! {
+    static ref DURATION: String = format!(&quot;{}&quot;, random_durations::gen_random_dur());
+}
+
+lazy_static! {
+    static ref DURATIONS: Vec&lt;String&gt; = random_durations::gen_random_durs_text(1000);
+}
+
+#[cfg(feature = &quot;nom&quot;)]
+#[bench]
+fn nom(b: &amp;mut Bencher) {
+    single(b, &amp;nom_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;nom&quot;)]
+#[bench]
+fn nom_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;nom_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;pest&quot;)]
+#[bench]
+fn pest(b: &amp;mut Bencher) {
+    single(b, &amp;pest_duration_parser::parse);
+}
+#[cfg(feature = &quot;pest&quot;)]
+#[bench]
+fn pest_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;pest_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;combine&quot;)]
+#[bench]
+fn combine(b: &amp;mut Bencher) {
+    single(b, &amp;combine_duration_parser::parse);
+}
+#[cfg(feature = &quot;combine&quot;)]
+#[bench]
+fn combine_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;combine_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;hand&quot;)]
+#[bench]
+fn hand_rolled(b: &amp;mut Bencher) {
+    single(b, &amp;hand_rolled_duration_parser::parse);
+}
+#[cfg(feature = &quot;hand&quot;)]
+#[bench]
+fn hand_rolled_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;hand_rolled_duration_parser::parse);
+}
+fn single(b: &amp;mut Bencher, f: &amp;impl Fn(&amp;str) -&gt; Result&lt;Duration, String&gt;) {
+    b.iter(|| {
+        black_box(f(&amp;DURATION).unwrap());
+    });
+}
+
+fn thousand(b: &amp;mut Bencher, f: &amp;impl Fn(&amp;str) -&gt; Result&lt;Duration, String&gt;) {
+    b.iter(|| {
+        for s in DURATIONS.iter() {
+            black_box(f(s).unwrap());
+        }
+    })
+}
+#}</code></pre></pre>
 <!--web-only-end-->
 <table><thead><tr><th>crate       </th><th> parse 1 (+/-)      </th><th> parse 1000 (+/-)   </th><th> build time </th><th> release size</th></tr></thead><tbody>
 <tr><td>nom         </td><td> 363.00ns (10.00ns) </td><td> 844.53ms (64.04ms) </td><td> 6.98s      </td><td> 727.08 kb   </td></tr>

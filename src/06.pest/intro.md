@@ -2,7 +2,7 @@
 ## Overview
 $web-only$
 
-`pest` is a completely different approach from the other two options discussed here. Instead of building your own parser, you write out your grammar, in their format, and `pest` does all the building for you. Since it is designed to handle anything you throw at it you ultimately are sacrificing speed for convenience which can be a very valid sacrifice.
+`pest` is a completely different approach from the other two options discussed here. Instead of building your own parser you write out your grammar, in their format, and `pest` does all the building for you. Since it is designed to handle anything you throw at it you ultimately are sacrificing speed for convenience which can be a very valid sacrifice.
 
 $web-only-end$
 $slides-only$
@@ -12,7 +12,7 @@ $slides-only-end$
 
 ## Positives
 $web-only$
-The biggest advantage that `pest` has over the other options is the barrier to entry. The learning curve is pinned almost entirely learning to the standard grammar formats. If you don't already have this skill it is a pretty valuable one to have so the cost of that is nominal. Another perk of this system is that you might be able to find a similar grammar format published online somewhere. A good example of this is the es5 grammar I found when I was getting started with my parsers, you can see it [here](http://boshi.inimino.org/3box/PanPG/grammars/ECMAScript_5.peg). It won't fit exactly but often a simple find/replace can do almost all of the work for you. Lastly, you are off loading a large amount of the solution development to a tool, this makes it much faster to get up and running.
+The biggest advantage that `pest` has over the other options is the barrier to entry. The learning curve is pinned almost entirely learning to the grammar format. If you don't already have this skill it is a pretty valuable one to have so the cost of that is nominal. Another perk of this system is that you might be able to find a similar grammar format published online somewhere. A good example of this is the es5 grammar I found when I was getting started with my parsers, you can see it [here](http://boshi.inimino.org/3box/PanPG/grammars/ECMAScript_5.peg). It won't fit exactly but often a simple find/replace can do almost all of the work for you. Lastly, you are off loading a large amount of the solution development to a tool, this makes it much faster to get up and running.
 $web-only-end$
 $slides-only$
 - Low barrier to entry

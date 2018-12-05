@@ -161,14 +161,19 @@ use combine::{
     error::UnexpectedParse,
 };
 pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
-    let value = || {recognize((
-        skip_many1(digit()),
-        optional((item(b'.'), skip_many(digit()))),
-    ))
-    .and_then(|bs: &amp;[u8]| {
-        let s = ::std::str::from_utf8(bs).map_err(|_| UnexpectedParse::Unexpected)?;
-        s.parse::&lt;f32&gt;().map_err(|_| UnexpectedParse::Unexpected)
-    })};
+    let value = || {
+        recognize((
+            skip_many1(digit()),
+            optional((
+                item(b'.'),
+                skip_many(digit())
+            )),
+        ))
+        .and_then(|bs: &amp;[u8]| {
+            let s = ::std::str::from_utf8(bs).map_err(|_| UnexpectedParse::Unexpected)?;
+            s.parse::&lt;f32&gt;().map_err(|_| UnexpectedParse::Unexpected)
+        })
+    };
     let pair = |time: bool| {
         (
             value(),

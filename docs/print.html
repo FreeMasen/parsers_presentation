@@ -187,8 +187,7 @@
 </ul>
 <!--slides-only-end-->
 <!--web-only-->
-<p>In early 2018, I found myself looking for a crate that would parse javascript into an AST. While there are a few options out there for parsing javascript, they are all tied to some greater development tool. What I was looking for was <code>syn</code> but for javascript. Since this didn't exist, I thought it would be a good idea to build it.</p>
-<p>The first step in that process was to decide which of parsing crate to use under the hood, if one at all. To decide, I tried out three options <code>nom</code>, <code>combine</code>, and <code>pest</code>. Each have different ergonomics and performance considerations, here is what I found.</p>
+<p>In early 2018, I found myself looking for a crate that would parse javascript into an AST. While there are a few options out there for parsing javascript, they are all tied to some greater development tool. What I was looking for was <a href="https://github.com/dtolnay/syn"><code>syn</code></a> but for javascript. Since this didn't exist, I thought it would be a good idea to build it. After looking over the options available, I wanted to share my experience.</p>
 <!--web-only-end-->
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
@@ -213,24 +212,30 @@
 </ul>
 <!--slides-only-end-->
 <!--web-only-->
-<p>First, I wanted to leverage the tools that already existed to make my life a little easier. I searched for a lower level byte parsing library, and found 3 options that I wanted to investigate.</p>
+<p>The first choice to make when building a parser is which of the parser
+crates to use, if one at all. In my search for a parsing crate I found
+3 options that I wanted to investigate.</p>
 <p>The three crates were <code>nom</code>, <code>pest</code>, and <code>combine</code>.
 Three popular options that take different approaches.
 <code>nom</code>'s approach is to use macros to define parsing pipelines called combinators.
-<code>combine</code> also leverages combinators but instead of using macros, it uses regular rust functions.
-<code>pest</code> is a PEG parser generator, meaning it utilizes an external grammar file to generate a parser struct for you.</p>
+<code>combine</code> also leverages combinators but instead of using macros,
+it uses regular rust functions.
+<code>pest</code> is a PEG parser generator, meaning it utilizes an external grammar
+file to generate a parser for you.</p>
 <!--web-only-end-->
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
 <a class="header" href="#our-format" id="our-format"><h1>Our Format</h1></a>
 <!--web-only-->
-<p>As we investigate these options, we should probably have a format that we want to parse so each
-example will cover the same problems.</p>
-<p>One format that I think is simple enough to be digestible while being complicated enough to be interesting is the ISO 8601 Duration format. The ISO 8601 is the date/time specification that aids in making dates work across cultures, sometimes referred to as I18n.</p>
+<p>As we investigate these options, we should probably have a format that we want to parse to keep each example consistent.</p>
+<p>One format that I think is simple enough to be digestible while being complicated
+enough to be interesting is the ISO 8601 Duration format. ISO 8601 is the date/time specification that aids in making dates work across cultures, sometimes
+referred to as I18n. You may be familiar time libraries that advertize their 8601
+support, <a href="https://github.com/chronotope/chrono#readme">chrono</a> for example.</p>
 <blockquote>
 <p>As an aside, I18n is an abbreviation for Internationalization, it is used because there are 18 letters between the I and the last n</p>
 </blockquote>
-<p>The duration format is dynamic, yet simple. Each duration will start with the character <code>P</code>, followed by at least one value and unit of time. The value of time can be an integer or decimal value, the unit is a single capital letter. The units are broken into two sections separated by a <code>T</code>. The first section includes <code>Y</code>ear, <code>M</code>onth, <code>W</code>eek, and <code>D</code>ay and the second section include <code>H</code>our, <code>M</code>inute, and <code>S</code>econd.</p>
+<p>The duration format is dynamic, yet simple. Each duration will start with the character <code>P</code>, a list of number letter pairs. The number can be an integer or decimal value, the letter is a single capital letter. The units are broken into two sections separated by a <code>T</code>. The first section includes <code>Y</code>ear, <code>M</code>onth, <code>W</code>eek, and <code>D</code>ay and the second section include <code>H</code>our, <code>M</code>inute, and <code>S</code>econd.</p>
 <!--web-only-end-->
 <!--slides-only-->
 <a class="header" href="#iso-8601-durations" id="iso-8601-durations"><h2>ISO 8601 Durations</h2></a>
@@ -258,96 +263,152 @@ example will cover the same problems.</p>
 <li>One of Everything: <code>P1Y1M1W1DT1H1M1.1S</code></li>
 </ul>
 <!--web-only-->
-<p>With any data format, there are a few things here that could be problematic in a real world scenario. First, the size of each value is unspecified meaning deserializing a duration with two great of value could lead to overflow. Second, the larger of the units don't always have a consistent or clear meaning, a good example of this would the <code>M</code>onth unit, Using the gregorian calendar a month could be anywhere from 28 to 31 days. I bring this up because theses are important things to think about when approaching deserialization or parsing process.</p>
+<p>With any data format, there are a few things here that could be problematic in a
+real world scenario. First, the size of each number is unspecified meaning
+deserializing a duration with two large a value could lead to overflow. Second,
+the larger of the units don't always have a consistent or clear meaning, a good
+example of this would a <code>M</code>onth, using the gregorian calendar a month could
+be anywhere from 28 to 31 days. I bring this up because theses are important
+things to think about when approaching deserialization or parsing process.
+So long as both the serializer and deserializer agree on the meaning of
+any given symbol, everything should work out just fine.</p>
 <!--web-only-end-->
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
 <a class="header" href="#bnf-grammar" id="bnf-grammar"><h1>BNF Grammar</h1></a>
 <!--web-only-->
-<p>Another thing that will prove useful if you are interested in getting started with parsing
-is to understand that there are languages out there for talking about languages. The overall structure
-of any format is called a grammar, when explaining the structure of a format it is helpful to have
-method to communicate it. One option is to use the Backus-Naur Form (BNF), if you scroll down you will find the ISO 8601 Duration specification written in the BNF.</p>
-<p>For those unfamiliar with grammar forms, they consist of a series of rules, the left side of a rule is a name, the right side is a description of what that rule means, they are separated by <code>::=</code> in BNF.</p>
-<p>I find it easiest to read a grammar from the bottom up. Using the example below we have the <code>digit</code> rule, on the right side of this rule we see each number from 0 to 9 separated by a <code>|</code>, which here means <em>or</em>, so a digit is a single digit number from 0 through 9. Next we have the <code>integer</code> rule, this is either an <code>integer</code> followed by a <code>digit</code> or &quot;&quot;. This is where things can get a little confusing, To illustrate that something has a possibly, infinite length, grammars typically use this kind of notation.</p>
-<p>To me, this style of notation feels backwards, lets use the example <code>999</code>. If you think about it starting with the right most <code>9</code>, you would assign that position <code>&lt;integer&gt;&lt;digit&gt;</code>, the <code>&lt;integer&gt;</code> here would point to the middle <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code> and again the first <code>&lt;integer&gt;</code> would represent the left most <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code>, but the first <code>&lt;integer&gt;</code> in this case would be assigned <code>&quot;&quot;</code>. Here is a little flow chart to hopefully help visualize what I am trying to say.</p>
-<pre><code class="language-xml">&lt;integer&gt; = &quot;&quot;
-    ┗━━━━━━┓
+<p>At this point I want to take a moment and cover the concept of language grammars.
+In my experience most parsing resources will assume that you have at least
+a little knowledge about the concept making these resources difficult to use if
+you don't. If you already know a bit about language grammars, feel free to skip
+this page.</p>
+<p>Essentially grammars are a way to write a definition for a language with the
+goal of making it easier to talk about that language. I am using the term
+language here pretty broadly to mean any agreed upon data format. That means that
+the 8601 Duration format could be thought of as a language though most people would
+not consider it one.</p>
+<p>There are many options to choose from when trying to document a grammar,
+just like there are many language options to choose from when building software.
+I am going to use the Backus-Naur Form (BNF). We will going to walk through
+a BNF grammar describing the ISO 8601 Duration format piece by piece but
+if you wanted to look at the full thing you can scroll to the bottom of this page.</p>
+<p>For those unfamiliar with grammar forms, they consist of a series of rules,
+the left side of a rule is a name, the right side is a description of what
+that rule means, in BNF the sides are separated by <code>::=</code>.</p>
+<p>I find it easiest to read a grammar from the bottom up. For our duration format
+we would start with the rule <code>digit</code></p>
+<pre><code class="language-xml">&lt;digit&gt;       ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+</code></pre>
+<p>On the right side of this rule we see each number from 0 to 9 separated by a
+<code>|</code>, which here means <em>or</em>, so a digit is a single digit number from 0
+through 9. Next we have the <code>integer</code> rule.</p>
+<pre><code class="language-xml">&lt;integer&gt;     ::= &lt;digit&gt; | &lt;integer&gt;&lt;digit&gt;
+</code></pre>
+<p>An <code>integer</code> is either a single digit or an <code>integer</code> followed by a <code>digit</code>.
+This is where things can get a little confusing as this style of
+notation might feel backwards, at least it does to me. Lets use the
+example <code>999</code>, if you think about it starting with the right most <code>9</code>,
+you would assign that position <code>&lt;integer&gt;&lt;digit&gt;</code>, the <code>&lt;integer&gt;</code> here
+would point to the middle <code>9</code>, this would also be assigned <code>&lt;integer&gt;&lt;digit&gt;</code>
+and again the <code>&lt;integer&gt;</code> would represent the left most <code>9</code>, this would
+finally be assigned <code>&lt;digit&gt;</code>. Here is a little flow chart to hopefully
+help visualize what I am trying to say.</p>
+<pre><code class="language-xml">&lt;integer&gt; = 9
+    ┗━━━━━━━━━━━┓
 &lt;integer&gt; = &lt;integer&gt;9
-    ┗━━━━━━┓
-&lt;integer&gt; = &lt;integer&gt;9
-    ┗━━━━━━┓
+    ┗━━━━━━━━━━━┓
 &lt;integer&gt; = &lt;integer&gt;9
 </code></pre>
-<p>When the right side of a rule looks like this it is referred to as a &quot;recursive&quot; rule. Moving up the grammar, next we have the <code>remainder</code> rule, this is either a <code>.</code> followed by an <code>integer</code> or nothing. Next up we have <code>number</code> which either an <code>integer</code> or a <code>remainder</code> or an <code>integer</code> followed by a <code>remainder</code>.</p>
-<p>The next few rules are our units, you will notice that there are two rules for each unit this is because need to have two versions, one non-optional and one optional. Each of the rules is a <code>number</code> followed by the specific unit's character, the optional version is just the normal version or nothing.</p>
-<p>After our units we have the two halves of our duration, the <code>time-length</code> and the <code>date-length</code>, notice that we again have the optional version of each. These rules are almost identical in structure, the only difference is the units that are included. Using the <code>date-length</code> as an example, we have 4 options in each option one of the units is not optional. so a date-length is one of the following</p>
-<ul>
-<li>first
-<ul>
-<li>optional year</li>
-<li>optional month</li>
-<li>optional week</li>
-<li>day</li>
-</ul>
-</li>
-<li>second
-<ul>
-<li>optional year</li>
-<li>optional month</li>
-<li>week</li>
-<li>optional day</li>
-</ul>
-</li>
-<li>third
-<ul>
-<li>optional year</li>
-<li>month</li>
-<li>optional week</li>
-<li>optional day</li>
-</ul>
-</li>
-<li>fourth
-<ul>
-<li>year</li>
-<li>optional month</li>
-<li>optional week</li>
-<li>optional day
-This is because one unit is always required for a date-length. The same applies to the <code>time-length</code> rule, the only difference is that the <code>time-length</code> starts with a <code>T</code>.</li>
-</ul>
-</li>
-</ul>
-<p>Finally we have the <code>duration</code> rule, this is the letter <code>P</code> followed by either an optional <code>date-length</code> and a <code>time-length</code> or a <code>date-length</code> followed by an optional <code>time-length</code>, again both items are optional but at least one must be included.</p>
-<p>With that out of the way, let's dig into each of our options a little more.</p>
+<p>When the right side of a rule looks like this it is referred to as a
+&quot;left recursive&quot; rule. In this case we could also write it as <code>&lt;digit&gt;&lt;integer&gt;</code> making it &quot;right recursive&quot;. The more important take away is that if you see a
+rule in its own definition then it <em>could</em> go on forever in one direction or the other.</p>
+<p>Moving up the grammar, next we have the <code>remainder</code> rule.</p>
+<pre><code class="language-xml">&lt;remainder&gt;   ::= .&lt;integer&gt;
+</code></pre>
+<p>This rule is defined by a <code>.</code> followed by an <code>integer</code>. At this point it
+should become clear that as we move up the grammar, each rule will combine
+the previous rules, possibly with some additions which is why I like to
+start from the bottom. Next up we have <code>number</code>.</p>
+<pre><code class="language-xml">&lt;number&gt;      ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
+</code></pre>
+<p>A <code>number</code> is either an <code>integer</code> or a <code>remainder</code> or an <code>integer</code> followed
+by a <code>remainder</code>. This is a bit verbose but essentially we need a way
+to say that both are optional but at least one must exist. So <code>0</code> would
+work, also <code>.877</code> would work and finally <code>0.877</code> would work.</p>
+<p>The next few rules finally start to get into the specifics of the format.
+There are two rules for each of our number + letter pairs. Since we are
+using BNF the only operator we get is the <code>|</code> for or, some other grammar
+notations use other operators to make things a little more concise. If you have
+ever written a regular expression, you would be familiar with the <code>+</code> or <code>?</code>
+operators for declaring recursion or optional values. In BNF we are required
+to create a new rule for the optional case if we want to have both optional
+and non-optional. Take the <code>seconds</code> and <code>seconds-opt</code> rules as an example.</p>
+<pre><code class="language-xml">&lt;seconds-opt&gt; ::= &lt;seconds&gt; | &quot;&quot;
+&lt;seconds&gt;     ::= &lt;number&gt;S
+</code></pre>
+<p>The bottom one fits with what we went over on the previous page, a number
+followed by the capital letter <code>S</code>. The top one is just a way to make the
+previous rule optional. There is an entry like the above for each of our
+duration parts. After those we get to the <code>time</code> rule, this rule will
+hopefully make it clear why we needed those optional rules.</p>
+<pre><code class="language-xml">&lt;time&gt;        ::= T&lt;hours-opt&gt;&lt;minths-opt&gt;&lt;seconds&gt; |
+                  T&lt;hours-opt&gt;&lt;minths&gt;&lt;seconds-opt&gt; |
+                  T&lt;hours&gt;&lt;minths-opt&gt;&lt;seconds-opt&gt;
+</code></pre>
+<blockquote>
+<p>minth is used here as both <code>M</code>onth and <code>M</code>inute</p>
+</blockquote>
+<p>This rule has 3 options, all three start with the letter <code>T</code> and each is
+followed by all 3 of the time rules, in each case one of the time rules
+is not optional. This is saying that each of these parts can be optional
+but not all of them can be absent. So <code>T1H</code> or <code>T2M1S</code> are okay but <code>T</code>
+is not a valid <code>time</code>. Skipping ahead to the <code>date</code> rule we see a similar
+pattern.</p>
+<pre><code class="language-xml">&lt;date&gt;        ::= &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
+                  &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
+                  &lt;years-opt&gt;&lt;minths&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
+                  &lt;years&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
+</code></pre>
+<p>So a <code>date</code> can be <code>1D</code> or <code>1M1W</code> but couldn't just be empty. You might
+have noticed that we again have an optional version of <code>time</code>, just
+like we did for the duration unit rules. When we look at the <code>duration</code>
+rule, the top rule in the grammar, it should become clears as to why.</p>
+<pre><code class="language-xml">&lt;duration&gt;    ::= P&lt;date-length&gt;&lt;time-length-opt&gt; |
+                  P&lt;time-length&gt;
+</code></pre>
+<p>As we covered in the previous page, durations can have from 1 to 7
+number letter pairs. So this rule is saying that we can have a duration
+only with a date part (<code>P1M</code>) or a date part and a time part time part
+(<code>P1DT1H</code>) or just a time part(<code>PT1S</code>) but it cannot be empty (<code>P</code>).</p>
+<p>If you haven't already below is the full BNF grammar I wrote for this
+the ISO 8601 Duration format.</p>
 <!--web-only-end-->
-<pre><code class="language-xml">&lt;duration&gt;              ::= P &lt;date-length-opt&gt;&lt;time-length&gt; |
-                            P &lt;date-length&gt;&lt;time-length-opt&gt;
-&lt;date-length-opt&gt;       ::= &lt;date-length&gt; | &quot;&quot;
-&lt;date-length&gt;           ::= &lt;years-opt&gt;&lt;months-or-minutes-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
-                            &lt;years-opt&gt;&lt;months-or-minutes-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
-                            &lt;years-opt&gt;&lt;months-or-minutes&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
-                            &lt;years&gt;&lt;months-or-minutes-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
-&lt;time-length-opt&gt;       ::= &lt;time-length&gt; | &quot;&quot;
-&lt;time-length&gt;           ::= T&lt;hours-opt&gt;&lt;months-or-minutes-opt&gt;&lt;seconds&gt; |
-                            T&lt;hours-opt&gt;&lt;months-or-minutes&gt;&lt;seconds-opt&gt; |
-                            T&lt;hours&gt;&lt;months-or-minutes-opt&gt;&lt;seconds-opt&gt;
-&lt;years-opt&gt;             ::= &lt;years&gt; | &quot;&quot;
-&lt;years&gt;                 ::= &lt;number&gt;Y
-&lt;months-or-minutes-opt&gt; ::= &lt;months-or-minutes&gt; | &quot;&quot;
-&lt;months-or-minutes&gt;     ::= &lt;number&gt;M
-&lt;weeks-opt&gt;             ::= &lt;weeks&gt; | &quot;&quot;
-&lt;weeks&gt;                 ::= &lt;number&gt;W
-&lt;days-opt&gt;              ::= &lt;days&gt; | &quot;&quot;
-&lt;days&gt;                  ::= &lt;number&gt;D
-&lt;hours-opt&gt;             ::= &lt;hours&gt; | &quot;&quot;
-&lt;hours&gt;                 ::= &lt;number&gt;H
-&lt;seconds-opt&gt;           ::= &lt;seconds&gt; | &quot;&quot;
-&lt;seconds&gt;               ::= &lt;number&gt;S
-&lt;number&gt;                ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
-&lt;remainder&gt;             ::= .&lt;integer&gt; | &quot;&quot;
-&lt;integer&gt;               ::= &lt;integer&gt;&lt;digit&gt; | &quot;&quot;
-&lt;digit&gt;               ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-
+<pre><code class="language-xml">&lt;duration&gt;    ::= P&lt;date-length&gt;&lt;time-length-opt&gt; |
+                  P&lt;time-length&gt;
+&lt;date&gt;        ::= &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days&gt; |
+                  &lt;years-opt&gt;&lt;minths-opt&gt;&lt;weeks&gt;&lt;days-opt&gt; |
+                  &lt;years-opt&gt;&lt;minths&gt;&lt;weeks-opt&gt;&lt;days-opt&gt; |
+                  &lt;years&gt;&lt;minths-opt&gt;&lt;weeks-opt&gt;&lt;days-opt&gt;
+&lt;time-opt&gt;    ::= &lt;time-length&gt; | &quot;&quot;
+&lt;time&gt;        ::= T&lt;hours-opt&gt;&lt;minths-opt&gt;&lt;seconds&gt; |
+                  T&lt;hours-opt&gt;&lt;minths&gt;&lt;seconds-opt&gt; |
+                  T&lt;hours&gt;&lt;minths-opt&gt;&lt;seconds-opt&gt;
+&lt;years-opt&gt;   ::= &lt;years&gt; | &quot;&quot;
+&lt;years&gt;       ::= &lt;number&gt;Y
+&lt;minths-opt&gt;  ::= &lt;months-or-minutes&gt; | &quot;&quot;
+&lt;minths&gt;      ::= &lt;number&gt;M
+&lt;weeks-opt&gt;   ::= &lt;weeks&gt; | &quot;&quot;
+&lt;weeks&gt;       ::= &lt;number&gt;W
+&lt;days-opt&gt;    ::= &lt;days&gt; | &quot;&quot;
+&lt;days&gt;        ::= &lt;number&gt;D
+&lt;hours-opt&gt;   ::= &lt;hours&gt; | &quot;&quot;
+&lt;hours&gt;       ::= &lt;number&gt;H
+&lt;seconds-opt&gt; ::= &lt;seconds&gt; | &quot;&quot;
+&lt;seconds&gt;     ::= &lt;number&gt;S
+&lt;number&gt;      ::= &lt;integer&gt; | &lt;remainder&gt; | &lt;integer&gt;&lt;remainder&gt;
+&lt;remainder&gt;   ::= .&lt;integer&gt;
+&lt;integer&gt;     ::= &lt;digit&gt; | &lt;integer&gt;&lt;digit&gt;
+&lt;digit&gt;       ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 </code></pre>
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
@@ -356,19 +417,6 @@ This is because one unit is always required for a date-length. The same applies 
 <p>Before we dig into each implementation, I want to cover a few things that are common
 to most of the examples. The first thing they share is the following enum.</p>
 <!--web-only-end-->
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-pub struct Duration {
-    years: Option&lt;f32&gt;,
-    months: Option&lt;f32&gt;,
-    weeks: Option&lt;f32&gt;,
-    days: Option&lt;f32&gt;,
-    hours: Option&lt;f32&gt;,
-    minutes: Option&lt;f32&gt;,
-    seconds: Option&lt;f32&gt;,
-}
-#}</code></pre></pre>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -383,7 +431,24 @@ enum DurationPart {
 }
 #}</code></pre></pre>
 <!--web-only-->
-<p>This will represent a successfully parsed number/unit pair. so <code>100Y</code> would translate to <code>DurationPart::Years(100.0)</code></p>
+<p>This is going to be how we represent each of the parts of a duration as we
+are parsing the input. Once parsing is done we will combine them into
+a full representation of a duration.</p>
+<!--web-only-end-->
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub struct Duration {
+    years: Option&lt;f32&gt;,
+    months: Option&lt;f32&gt;,
+    weeks: Option&lt;f32&gt;,
+    days: Option&lt;f32&gt;,
+    hours: Option&lt;f32&gt;,
+    minutes: Option&lt;f32&gt;,
+    seconds: Option&lt;f32&gt;,
+}
+#}</code></pre></pre>
+<!--web-only-->
 <p>The next thing that pops up across multiple crates is the need to parse a string into a float.</p>
 <blockquote>
 <p>quick note:, the values are not actual floating point numbers as the spec does not allow for scientific notation (<code>1.2e-3</code>), they would be more akin to the decimal data type provided in some languages.</p>
@@ -398,8 +463,6 @@ let value: f32 = value_str.parse();
 #}</code></pre></pre>
 <!--web-only-->
 <p>Here the <code>parse</code> method on <code>&amp;str</code> returns a result, so we would need to deal with that as well.</p>
-<!--web-only-end-->
-<!--web-only-->
 <p>The last thing to cover here is that each parser will need to deal with the fact that <code>M</code> can mean either month or minute. While there isn't a shared code solution for this, it does pop up a few times.</p>
 <!--web-only-end-->
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
@@ -449,97 +512,27 @@ This allows it to be performant yet flexible but significantly increases the lea
 <!--web-only-->
 <p>A good place to start when learning to use <code>nom</code> is the <code>named!</code> macro, this macro will create a function for you with a specific name and behavior. <code>named!</code> takes two arguments, the first is the function's name, this needs to include 2 generic arguments, the second is the function's body. This can be a little difficult to get used to but it isn't too much of a pain. The generic arguments provided with the name define the data type of the argument and return type respectively.</p>
 <p>This is already starting to feel difficult to explain, I will re-iterate one last time that the learning curve for <code>nom</code> is pretty steep.</p>
-<p>Just like with our grammar, let's start at the bottom and move up. The first <code>named!</code> entry we have in that direction is called <code>float</code>, which takes <code>CompleteStr</code> and returns <code>f32</code>. The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.</p>
+<p>Just like with our grammar, let's start at the bottom and move up. The first <code>named!</code> entry we have in that direction is called <code>float</code>, which takes <code>CompleteStr</code> and returns <code>f32</code>.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-extern crate duration;
-#[macro_use]
-extern crate nom;
-use nom::types::CompleteStr;
-use duration::Duration;
-pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
-    let pair = duration(s.into()).map_err(|e| format!(&quot;{}&quot;, e))?;
-    Ok(pair.1)
-}
-
-named!(duration&lt;CompleteStr, Duration&gt;,
-    do_parse!(
-        tag!(&quot;P&quot;) &gt;&gt;
-        date_parts: opt!(many_m_n!(1, 4, date_part)) &gt;&gt;
-        time_parts: opt!(time_parts) &gt;&gt;
-        (combine_duration_parts(date_parts, time_parts))
-    )
-);
-
-fn combine_duration_parts(date_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;, time_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;) -&gt; Duration {
-    let mut duration = Duration::new();
-    for part in date_parts.unwrap_or(Vec::new()).iter().chain(time_parts.unwrap_or(Vec::new()).iter()) {
-        match part {
-            DurationPart::Years(value) =&gt; duration.set_years(*value),
-            DurationPart::Months(value) =&gt; duration.set_months(*value),
-            DurationPart::Weeks(value) =&gt; duration.set_weeks(*value),
-            DurationPart::Days(value) =&gt; duration.set_days(*value),
-            DurationPart::Hours(value) =&gt; duration.set_hours(*value),
-            DurationPart::Minutes(value) =&gt; duration.set_minutes(*value),
-            DurationPart::Seconds(value) =&gt; duration.set_seconds(*value),
-        }
-    }
-    duration
-}
-
-named!(time_parts&lt;CompleteStr, Vec&lt;DurationPart&gt;&gt;,
-    do_parse!(
-        tag!(&quot;T&quot;) &gt;&gt;
-        time_parts: many_m_n!(1, 3, time_part) &gt;&gt;
-        (time_parts)
-    )
-);
-
-named!(date_part&lt;CompleteStr, DurationPart&gt;,
-    do_parse!(
-        part: duration_part &gt;&gt;
-        (combine_duration_part(part.0, part.1, false))
-    )
-);
-
-
-named!(time_part&lt;CompleteStr, DurationPart&gt;,
-    do_parse!(
-        part: duration_part &gt;&gt;
-        (combine_duration_part(part.0, part.1, true))
-    )
-);
-
-fn combine_duration_part(value: f32, flag: CompleteStr, is_time: bool) -&gt; DurationPart {
-    match *flag {
-        &quot;Y&quot; =&gt; DurationPart::Years(value),
-        &quot;M&quot; =&gt; if is_time {
-            DurationPart::Minutes(value)
-        } else {
-            DurationPart::Months(value)
-        },
-        &quot;W&quot; =&gt; DurationPart::Weeks(value),
-        &quot;D&quot; =&gt; DurationPart::Days(value),
-        &quot;H&quot; =&gt; DurationPart::Hours(value),
-        &quot;S&quot; =&gt; DurationPart::Seconds(value),
-        _ =&gt; unreachable!()
-    }
-}
-
-named!(duration_part&lt;CompleteStr, (f32, CompleteStr)&gt;,
-    do_parse!(
-        value: float &gt;&gt;
-        flag: take!(1) &gt;&gt;
-        (value, flag)
-    )
-);
-
-
 named!(float&lt;CompleteStr, f32&gt;,
     map_res!(take_while1!(digit), parse_float)
 );
-
+#}</code></pre></pre>
+<p>The second argument is two nested macro calls. To help understand this conceptually here is a very loose interpretation of what this might look like as a function.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn float(i: CompleteStr) -&gt; Result&lt;f32, Error&gt; {
+    map_res!(take_while1!(i, digit), parse_float)
+}
+#}</code></pre></pre>
+<p>While the above is an extreme simplification, I hope it illustrates what is going on when we use the <code>named!</code> macro.</p>
+<p>To dig into the function body a little, we are using macros provided by <code>nom</code>, the first is <code>map_res!</code> which takes two arguments. The first argument is going to be a parser, this will capture some portion of the input, the second argument is a function that will take the result of the first argument's parsing and return a <code>Result</code>. The basic idea here is that we are going to map the output of a parser with the function, since the function might fail <code>map_res!</code> will convert the function's error case into a <code>nom</code> error. The first argument is <code>take_while1!</code>, another <code>nom</code> macro, this takes a function that takes 1 argument, this argument needs to be the smallest part of the input which for this would be a <code>char</code> the function then needs to return a boolean, indicating if that <code>char</code> matches what we are expecting. To flesh that our a little we should probably cover the two helper functions we are using <code>digit</code> and <code>parse_float</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
 fn digit(c: char) -&gt; bool {
     c.is_digit(10) || c == '.'
 }
@@ -547,25 +540,26 @@ fn digit(c: char) -&gt; bool {
 fn parse_float(s: CompleteStr) -&gt; Result&lt;f32, ::std::num::ParseFloatError&gt; {
     s.parse()
 }
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
-}
-fn float(i: CompleteStr) -&gt; Result&lt;f32, Error&gt; {
-    map_res!(take_while!(digit), parse_float)
-}
 #}</code></pre></pre>
-<p>While the above is an extreme simplification, I hope it illustrates what is going on when we use the <code>named!</code> macro.</p>
-<p>To dig into the function body a little, we are using two macros provided by <code>nom</code>, <code>map_res!</code> which takes a parser and a <code>Fn(I) -&gt; Result&lt;T, Error&gt;</code> where <code>I</code> is the input type, for us that would be <code>CompleteStr</code> and <code>T</code> is the return type which for this would be <code>f32</code>. The first argument we are using <code>take_while1!</code>, this is another <code>nom</code> macro the only argument it takes is a <code>Fn(B) -&gt; bool</code>, where <code>B</code> is the smallest part of the input, in our case that would be <code>char</code> since <code>CompleteStr</code> is a collection of <code>char</code>s. What this is going to do look at each <code>char</code> in the input and pass that to our test function, which checks to see if it is <code>0-9</code> or <code>.</code>, if it is one of those the <code>char</code> is added to the output, if not it stops and returns all of the <code>char</code>s it found as a <code>CompleteStr</code>. The last thing to note about this is that <code>take_whle1!</code> requires at least the first character it tries to be successful otherwise it fails. If we had the string <code>111.111D</code>, <code>take_while1!</code> would pull the first 7 characters ('111.111') off the front and return that.</p>
-<p>When we combine these two parts, <code>float</code> is going to pull 1 or more characters off the front of our input and then attempt to convert that into an <code>f32</code>, this will give us the value part of our <code>DurationUnit</code>.</p>
-<p>Moving up to the next <code>named!</code> we have <code>duration_part</code>, this takes a <code>CompleteStr</code> and returns a <code>(f32, CompleteStr)</code>. Looking at the body of <code>duration_part</code> we have another new <code>nom</code> macro <code>do_parse!</code>. This is a very powerful tool in the <code>nom</code> tool shed, <code>do_parse!</code> will take any number of parsers and apply them in sequence. We indicate the flow of the parsers using the <code>&gt;&gt;</code> operator, we can assign the result of any parse to a variable by putting that variable name and a colon before it. <code>do_parse!</code> requires the final item in your flow to be a tuple with the expected values. For the <code>duration_part</code> body, we first use the <code>float</code> parser, that will take all of the leading numbers off the front and convert them into an <code>f32</code> like we went over before. notice you are not calling <code>float()</code>, I'll get to that in just a moment. we are going to assign that <code>f32</code> to the variable <code>value</code>, once that is done we take the rest of our input and pass it to <code>nom</code>'s macro <code>take!</code>, which takes 1 argument of a <code>usize</code>. Similar to <code>take_while1!</code>, <code>take!</code> pulls stuff off the front of the input in the smallest parts possible, for us again that will be <code>char</code> but instead of using a function to test if we want a character it just takes the number of characters you passed in. For us this <code>take!</code> is just going to take 1 character.</p>
-<p>At this point, you may be asking yourself &quot;why does take! need to be called but float doesn't?&quot;, that is a great question. One of the things that is hardest to get used to is that all of the <code>nom</code> macros return functions, not values. To break this down a little <code>take!</code> doesn't return the character, it returns a function that returns the character.</p>
+<p>If we had the input <code>111.111H</code>, we would first use <code>take_while1</code> to pass each character to <code>digit</code>.</p>
+<table><thead><tr><th> 1 </th><th> 1 </th><th> 1 </th><th> . </th><th> 1 </th><th> 1 </th><th> 1 </th><th> H </th></tr></thead><tbody>
+<tr><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✓ </td><td> ✗ </td></tr>
+</tbody></table>
+<p>that would leave us with <code>111.111</code>, this would get passed along to <code>parse_float</code>, which would just call the <code>parse</code> method on <code>&amp;str</code>. Since the <code>parse</code> method returns a result, this would work for the requirement of <code>map_res!</code>. Now that we have a way to parse
+the number part of our number + letter pairs, we can move on to the next use of <code>named!</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(duration_part&lt;CompleteStr, (f32, CompleteStr)&gt;,
+    do_parse!(
+        value: float &gt;&gt;
+        flag: take!(1) &gt;&gt;
+        (value, flag)
+    )
+);
+#}</code></pre></pre>
+<p>Here we have defined <code>duration_part</code> this will take us from a <code>CompleteStr</code> to a tuple with the type <code>(f32, CompleteStr)</code>, it does this by using the <code>do_parse!</code> macro. <code>do_parse!</code> is our primary way to declare a parsing pipeline, we provide it with a list of parsers and the remaining input should be applied to them in order. Here we see the use of a couple of custom syntax items. The first is how we store a parser's result in a variable, we do that by putting the variable name and a colon before the parser (<code>value: float</code>). The second bit of custom syntax is the <code>&gt;&gt;</code> operator, this essentially means, &quot;and then&quot;. To break down what we are doing here, first we are using the <code>float</code> parser defined above, once done with that pass any remaining input on to the parser <code>take!</code>, which doesn't look at the input, just takes the number of characters requested, in our case 1.</p>
+<p>At this point, you may be asking yourself &quot;why does take! need to be called but float doesn't?&quot;, that is a great question. One of the things that is hardest to get used to is that all of the <code>nom</code> macros return functions, not values. To break this down a little <code>take!</code> doesn't return the character, it returns a function that returns the character, it might look something like this.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -577,15 +571,100 @@ fn take(i: CompleteStr) -&gt; Result&lt;CompleteStr, Error&gt; {
     }
 }
 #}</code></pre></pre>
-<p>That means the result of <code>take!</code> can be called, just like the <code>float</code>.</p>
-<p>Moving along, we are assigning that single character string to the variable <code>flag</code>, we then end with the tuple <code>(value, flag)</code> which is of type <code>(f32, CompleteStr)</code>.</p>
-<p>So now we should be able to successfully to parse our duration's smallest parts. Now we need to figure out how to get that into our <code>DurationPart</code> enum. Then next item moving up the chain is the helper function <code>combine_duration_part</code> this is going to take in the two parts the <code>f32</code> value and the <code>flag</code> as well as a third argument to indicate if an <code>M</code> means minutes or months.</p>
+<p>That means the result of <code>take!</code> can be called, just like the <code>float</code>. To put it another way, we are not parsing the input, instead we are building a parser out of other parsers that will parse the input.</p>
+<p>To finish the explanation of this <code>do_parse!</code>, the last step in any use of <code>do_parse!</code> we need to have a tuple, this will be the return value, for us that is the tuple of <code>(value, flag)</code> which is of type <code>(f32, CompleteStr)</code>.</p>
+<p>At this point we should be able to parse a duration's smallest part. Now we need to figure out how to get that into our <code>DurationPart</code> enum. Then next item moving up the file is the helper function <code>combine_duration_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn combine_duration_part(value: f32, flag: CompleteStr, is_time: bool) -&gt; DurationPart {
+    match *flag {
+        &quot;Y&quot; =&gt; DurationPart::Years(value),
+        &quot;M&quot; =&gt; if is_time {
+            DurationPart::Minutes(value)
+        } else {
+            DurationPart::Months(value)
+        },
+        &quot;W&quot; =&gt; DurationPart::Weeks(value),
+        &quot;D&quot; =&gt; DurationPart::Days(value),
+        &quot;H&quot; =&gt; DurationPart::Hours(value),
+        &quot;S&quot; =&gt; DurationPart::Seconds(value),
+        _ =&gt; unreachable!()
+    }
+}
+#}</code></pre></pre>
+<p>This is going to take in the two parts the <code>f32</code> value and the <code>flag</code> as well as a third argument to indicate if an <code>M</code> means minutes or months.</p>
 <p>We are going to use this as we are building the two halves. The function itself is relatively simple, just a <code>match</code> statement on the flag, matching the appropriate letter to the duration part.</p>
-<p>As we move up the file, we have two more <code>named!</code> macros <code>date_part</code> and <code>time_part</code>. These are almost identical, essentially they use the <code>duration_part</code> to get first two arguments of <code>combine_duration_part</code>, it then provides the appropriate value for the third.</p>
-<p>As we continue up we have a <code>named!</code> item to parse the <code>time_parts</code>, here we have another call to <code>do_parse!</code> the first item here is is a call to <code>tag!</code>, another <code>nom</code> macro. This one simply recognizes whatever string you provide to it. In our case we are matching against the <code>T</code> that would begin the time section. It then moves on to another provided macro <code>many_m_n!</code>, this one takes three arguments, the first is the minimum number of times you expect something, the second is the maximum number of times you expect something, and the third is what you expect. In our case we expect a <code>time_part</code> at least 1 time, up to 3 times. We are going to assign the result of that to the variable <code>time_parts</code>, this value will be a <code>Vec&lt;DurationPart&gt;</code>. Since the last item in <code>do_parse!</code> needs to be a tuple, we wrap <code>time_parts</code> in one.</p>
-<p>Up next is another helper function, <code>combine_duration_parts</code>, this takes in two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>, the first will represent the date part and the second will represent the time part of our duration. Again this helper is mostly straight forward, it loops over both of, sets of parts (if they exist) and adds them all up into a <code>Duration</code>.</p>
-<p>Our last <code>named!</code> is the final step for combining all of our previous work. Again we start with a <code>do_parse!</code>, this one begins with a <code>tag!</code> for the first letter <code>P</code>, we pass the rest on to another <code>nom</code> macor <code>opt!</code>, this converts a standard parser into a one that returns an <code>Option</code>, we pass the first one another <code>many_m_n!</code> that will generate a <code>Vec&lt;DurationPart&gt;</code> with a length from one to four, assigning the result to a variable <code>date_parts</code>. It then passes the remainder of the text to another <code>opt!</code>, this one around <code>time_parts</code> ad assigns the result to a variable of the same name. Now we have the two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>s that we need to pass them along to the <code>combine_duration_parts</code> helper function.</p>
-<p>With all that we have finally built a <code>nom</code> parser that would take in our duration string and return a <code>Duration</code>. You will notice in the <code>parse</code> function that we actually call the last <code>named!</code> item manually providing the argument. This will always result in a <code>Result</code>, the <code>Ok</code> case for this result is going to be a pair, the first will be the remainder of the input, the second will be a <code>Duration</code>.</p>
+<p>As we move up the file, we have two more <code>named!</code> macros <code>date_part</code> and <code>time_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(date_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, false))
+    )
+);
+
+
+named!(time_part&lt;CompleteStr, DurationPart&gt;,
+    do_parse!(
+        part: duration_part &gt;&gt;
+        (combine_duration_part(part.0, part.1, true))
+    )
+);
+#}</code></pre></pre>
+<p>These are almost identical, essentially they use the <code>duration_part</code> to get first two arguments of <code>combine_duration_part</code>, it then provides the appropriate value for the third.</p>
+<p>As we continue up we have a <code>named!</code> item to parse the <code>time_parts</code>,</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(time_parts&lt;CompleteStr, Vec&lt;DurationPart&gt;&gt;,
+    do_parse!(
+        tag!(&quot;T&quot;) &gt;&gt;
+        time_parts: many_m_n!(1, 3, time_part) &gt;&gt;
+        (time_parts)
+    )
+);
+#}</code></pre></pre>
+<p>Here we have another call to <code>do_parse!</code> the first item here is is a call to <code>tag!</code>, another <code>nom</code> macro. This one simply recognizes whatever string you provide to it. In our case we are matching against the <code>T</code> that would begin the time section. It then moves on to another provided macro <code>many_m_n!</code>, this one takes three arguments, the first is the minimum number of times you expect something, the second is the maximum number of times you expect something, and the third is what you expect. In our case we expect a <code>time_part</code> at least 1 time, up to 3 times. We are going to assign the result of that to the variable <code>time_parts</code>, this value will be a <code>Vec&lt;DurationPart&gt;</code>. Since the last item in <code>do_parse!</code> needs to be a tuple, we wrap <code>time_parts</code> in parentheses.</p>
+<p>Up next is another helper function, <code>combine_duration_parts</code></p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn combine_duration_parts(date_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;, time_parts: Option&lt;Vec&lt;DurationPart&gt;&gt;) -&gt; Duration {
+    let mut duration = Duration::new();
+    for part in date_parts.unwrap_or(Vec::new()).iter().chain(time_parts.unwrap_or(Vec::new()).iter()) {
+        match part {
+            DurationPart::Years(value) =&gt; duration.set_years(*value),
+            DurationPart::Months(value) =&gt; duration.set_months(*value),
+            DurationPart::Weeks(value) =&gt; duration.set_weeks(*value),
+            DurationPart::Days(value) =&gt; duration.set_days(*value),
+            DurationPart::Hours(value) =&gt; duration.set_hours(*value),
+            DurationPart::Minutes(value) =&gt; duration.set_minutes(*value),
+            DurationPart::Seconds(value) =&gt; duration.set_seconds(*value),
+        }
+    }
+    duration
+}
+#}</code></pre></pre>
+<p>This takes in two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>, the first will represent the date part and the second will represent the time part of our duration. Again this helper is mostly straight forward, it loops over both, sets of parts (if they exist) and adds them all up into a <code>Duration</code>.</p>
+<p>Our last <code>named!</code> is the final step for combining all of our previous work.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+named!(duration&lt;CompleteStr, Duration&gt;,
+    do_parse!(
+        tag!(&quot;P&quot;) &gt;&gt;
+        date_parts: opt!(many_m_n!(1, 4, date_part)) &gt;&gt;
+        time_parts: opt!(time_parts) &gt;&gt;
+        (combine_duration_parts(date_parts, time_parts))
+    )
+);
+#}</code></pre></pre>
+<p>Again we start with a <code>do_parse!</code>, this one begins with a <code>tag!</code> for the first letter <code>P</code>, we pass the rest on to another <code>nom</code> macor <code>opt!</code>, this converts a standard parser into a one that returns an <code>Option</code>, we pass the first one another <code>many_m_n!</code> that will generate a <code>Vec&lt;DurationPart&gt;</code> with a length from one to four, assigning the result to a variable <code>date_parts</code>. It then passes the remainder of the text to another <code>opt!</code>, this one around <code>time_parts</code> and assigns the result to a variable of the same name. Now we have the two <code>Option&lt;Vec&lt;DurationPart&gt;&gt;</code>s that we need to pass them along to the <code>combine_duration_parts</code> helper function.</p>
+<p>With all that we have finally built a <code>nom</code> parser that would take in our duration string and return a <code>Duration</code>. You will notice in the <code>parse</code> function that we actually call the last <code>named!</code> item manually providing the argument. <code>nom</code> parsers always return a <code>Result</code>, the <code>Ok</code> case for this result is going to be a tuple, the first index will be the remainder of the input, the second will be a <code>Duration</code>.</p>
+<p>You can find the whole parser file below.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -683,16 +762,6 @@ fn digit(c: char) -&gt; bool {
 fn parse_float(s: CompleteStr) -&gt; Result&lt;f32, ::std::num::ParseFloatError&gt; {
     s.parse()
 }
-
-enum DurationPart {
-    Years(f32),
-    Months(f32),
-    Weeks(f32),
-    Days(f32),
-    Hours(f32),
-    Minutes(f32),
-    Seconds(f32),
-}
 #}</code></pre></pre>
 <!--web-only-end-->
 <!--slides-only-->
@@ -703,7 +772,7 @@ enum DurationPart {
 <a class="header" href="#combine" id="combine"><h1>Combine</h1></a>
 <a class="header" href="#overview-1" id="overview-1"><h2>Overview</h2></a>
 <!--web-only-->
-<p><code>combine</code> takes a similar approach to <code>nom</code> in that it asks its users to combine a series of parsers into a parent parser though its approach to creating a parser does not involve macros. This departure makes the learning curve much shallower but if you want to get <code>nom</code>-like speeds it is somewhat difficult to learn how to do that.</p>
+<p><code>combine</code> takes a similar approach to <code>nom</code> in that it asks its users to combine a series of parsers into something that itself is a parser though its approach to creating a parser does not involve macros. This departure makes the learning curve much shallower but if you want to get <code>nom</code>-like speeds it is somewhat difficult to learn how to do that.</p>
 <!--web-only-end-->
 <!--slides-only-->
 <ul>
@@ -714,7 +783,7 @@ enum DurationPart {
 <!--slides-only-end-->
 <a class="header" href="#positives-1" id="positives-1"><h2>Positives</h2></a>
 <!--web-only-->
-<p>After attempting to learn <code>nom</code>, <code>combine</code> feels like a breeze. The type annotations are a little verbose but there is no advanced macro syntax to learn. Their documentation and examples make getting started very easy. While the naive approach to building a parser in <code>combine</code> will almost certainly not be blazing fast, <em>can</em> achieve some impressive performance.</p>
+<p>After attempting to learn <code>nom</code>, <code>combine</code> feels like a breeze. The type annotations are a little verbose but there is no macro syntax to learn. Their documentation and examples make getting started very easy. While the naive approach to building a parser in <code>combine</code> will almost certainly not be blazing fast, <em>can</em> achieve some impressive performance.</p>
 <!--web-only-end-->
 <!--slides-only-->
 <ul>
@@ -745,15 +814,135 @@ fn float&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = f32&gt;
 where
     I: Stream&lt;Item = char&gt;,
     I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        many1(digit()),
+        optional((
+            char('.'),
+            many1::&lt;String, _&gt;(digit())
+        ))
+    ).map(|(int, rem)| {
+        let f = if let Some(rem) = rem {
+            format!(&quot;{}.{}&quot;, int, rem.1)
+        } else {
+            int
+        };
+        f.parse().unwrap()
+    })
+}
 #}</code></pre></pre>
 <p>We are saying that this function will return a parser who's input is of type <code>I</code> and output is an <code>f32</code>. Additionally we constrain <code>I</code> saying it needs to implement <code>Stream</code>, where the <code>Item</code> type is a <code>char</code>, and the <code>Error</code> type of <code>I</code> needs to implement <code>ParseError</code>. <code>ParseError</code> is also generic so we pass along the properties of <code>I</code>, <code>Item</code>, <code>Range</code>, and <code>Position</code>. This is pretty verbose, but I found that building a simple parser I didn't need to worry a ton about what it meant, instead just using it as a blueprint for all of my parser functions. That is to say, I just copied and pasted this whenever I wanted to add another parser to a source file.</p>
-<p>One thing to keep in mind is that these functions are not parsing the input but returning a struct that will be able to parse the input. We define these structs by combining them together and mapping over the result if successful. To indicate that parsers are chained together in a sequence we wrap them in either an array if they are all the exact same type otherwise we would use a tuple. Looking at the body of <code>float</code> we are using a tuple, with two parers inside it. The first parser is <code>many1</code> this takes a parser as an argument and applies it a minimum of 1 times but will collect the results until in argument parser fails, we passed in the result of calling <code>digit</code> which is a parser that will get us a single digit number. Next we have <code>optional</code> this takes in a parser and wraps the result in an <code>Option</code>, we pass it a tuple of 2 parsers the <code>char</code> parser, this is a single character and another <code>many1</code> with <code>digit</code> as its argument. Notice in this second call to <code>many1</code> we included a type annotation, <code>many1</code> operates similar to the <code>collect</code> method on an <code>iterator</code>, the result could be a number of different collections we are just telling it it should be a <code>String</code>.</p>
-<p>We now call <code>map</code> on our tuple, this essentially is saying if you find the pattern we defined, call this closure to generate the result. In this closure we are going to check and see if the remainder exists and coalesce that into a string with the integer portion if not just use the integer portion. We then call <code>str::parse</code> on that coalesced value.</p>
-<p>Moving up the file we next see <code>value_pair</code> the signature is similar to <code>float</code> though the <code>Output</code> type is <code>DurationPart</code> and it takes in an argument <code>time</code> to determine if <code>M</code> is a minute or a month. Again here we have a tuple, the first parser is the <code>float</code> parser we just defined, next is a <code>choice</code> parser, this takes in an array or tuple of parsers and tries each one starting at the top, stopping at the first successful. We have passed <code>choice</code> an array of <code>char</code> parsers with our unit characters. We map our tuple, this time our closure has the <code>move</code> keyword to take ownership of the <code>time</code> argument. We have annotated the argument to our closure to help the compiler figure out what we are trying to do here. <code>map</code> on a parser always takes 1 argument, this will be a tuple of the results, for us that is <code>f32</code> and <code>char</code>. We simply match on the <code>char</code> and generate the correct <code>DurationPart</code> variant as per the letter and the time flag.</p>
-<p>Next we have the <code>time_part</code> parser, here we have another tuple, the first parser is a call to <code>char</code> with our <code>T</code> indicator that this is time based values, the second is a <code>many1</code> call to the <code>value_pair</code> parser we just defined, passing <code>true</code> for the <code>time</code> flag. The map here is simply discarding the <code>T</code> character, that make the <code>Output</code> type annotation work for <code>p</code> which means it also work for <code>many1</code>.</p>
-<p>After <code>time_part</code> we have <code>date_part</code> this one is just the <code>many1</code> call to <code>value_pair</code> passing <code>false</code> for the <code>time</code> flag.</p>
-<p>The last of the parsers we are going to define is <code>duration</code>, this is another tuple indicating the sequence of a <code>char</code> of <code>P</code> followed by an <code>optional</code> <code>date_part</code> followed by an <code>optional</code> <code>time_part</code>. We <code>map</code> that, the argument to the <code>map</code> closure would be <code>(char, Option&lt;Vec&lt;DurationPart&gt;&gt;, Option&lt;Vec&lt;DurationPart&gt;&gt;)</code>. In the body we loop over those two <code>Vec</code>s if they exist, adding them to a <code>Duration</code> returning the result.</p>
-<p>In our <code>parse</code> function we create a <code>Duration</code> parser by calling <code>duration</code> and then pass a <code>&amp;str</code> to the <code>parse</code> method, this is one of the methods defined on the <code>Parser</code> trait. <code>Parse</code> returns a <code>Result</code> and in the <code>Ok</code> position we have a tuple, the first item has the same type as <code>Output</code> and the second is the remaining input to parse. For us the <code>Output</code> is going to be a <code>Duration</code> so we return <code>Ok(d.0)</code></p>
+<p>One thing to keep in mind is that these functions are not parsing the input but returning a parser that will be able to parse the input. We define these by combining them together and mapping over the result if successful. To indicate that parsers are chained together in a sequence we wrap them in either an array if they are all the exact same type otherwise we would use a tuple. Looking at the body of <code>float</code> we are using a tuple, with two parsers inside it. The first parser is <code>many1</code> this takes a parser as an argument and applies it a minimum of 1 times but will collect the results until in argument parser fails, we passed in the result of calling <code>digit</code> which is a parser that will get us a single digit number. Next we have <code>optional</code> this takes in a parser and wraps the result in an <code>Option</code>, we pass it a tuple of 2 parsers the <code>char</code> parser, this is a single character and another <code>many1</code> with <code>digit</code> as its argument. Notice in this second call to <code>many1</code> we included a type annotation, <code>many1</code> operates similar to the <code>collect</code> method on an <code>iterator</code>, the result could be a number of different collections we are just telling it it should be a <code>String</code>.</p>
+<p>We now call <code>map</code> on our tuple, this essentially is saying if you find the pattern we defined, call this closure to generate the <code>Output</code>. In this closure we are going to check and see if the remainder exists and coalesce that into a string with the integer portion if not just use the integer portion. We then call <code>str::parse</code> on that coalesced value.</p>
+<p>Moving up the file we next see <code>value_pair</code> the signature is similar to <code>float</code> though the <code>Output</code> type is <code>DurationPart</code> and it takes in an argument <code>time</code> to determine if <code>M</code> is a minute or a month.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn value_pair&lt;I&gt;(time: bool) -&gt; impl Parser&lt;Input = I, Output = DurationPart&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        float(),
+        choice([
+            char('Y'),
+            char('M'),
+            char('W'),
+            char('D'),
+            char('H'),
+            char('S'),
+        ])).map(move |(v, c): (f32, char)| {
+            match c {
+                'Y' =&gt; DurationPart::Years(v),
+                'M' =&gt; if time {
+                    DurationPart::Minutes(v)
+                } else {
+                    DurationPart::Months(v)
+                },
+                'W' =&gt; DurationPart::Weeks(v),
+                'D' =&gt; DurationPart::Days(v),
+                'H' =&gt; DurationPart::Hours(v),
+                'S' =&gt; DurationPart::Seconds(v),
+                _ =&gt; unreachable!()
+            }
+        })
+}
+#}</code></pre></pre>
+<p>Again here we have a tuple, the first parser is the <code>float</code> parser we just defined, next is a <code>choice</code> parser, this takes in an array or tuple of parsers and tries each one starting at the top, stopping at the first successful. We have passed <code>choice</code> an array of <code>char</code> parsers with our unit characters. We map our tuple, this time our closure has the <code>move</code> keyword to take ownership of the <code>time</code> argument. We have annotated the argument to our closure to help the compiler figure out what we are trying to do here. <code>map</code> on a parser always takes 1 argument, this will be a tuple of the results, for us that is <code>f32</code> and <code>char</code>. We simply match on the <code>char</code> and generate the correct <code>DurationPart</code> variant as per the letter and the time flag.</p>
+<p>Next we have the <code>time_part</code> parser.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn time_part&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Vec&lt;DurationPart&gt;&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        char('T'),
+        many1(value_pair(true))
+    ).map(|(_, p)| p)
+}
+#}</code></pre></pre>
+<p>Here we have another tuple, the first parser is a call to <code>char</code> with our <code>T</code> indicator that this is time based values, the second is a <code>many1</code> call to the <code>value_pair</code> parser we just defined, passing <code>true</code> for the <code>time</code> flag. The map here is simply discarding the <code>T</code> character, that make the <code>Output</code> type annotation work for <code>p</code> which means it also work for <code>many1</code>.</p>
+<p>After <code>time_part</code> we have <code>date_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn date_part&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Vec&lt;DurationPart&gt;&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        many1(value_pair(false))
+    )
+}
+#}</code></pre></pre>
+<p>This one is just the <code>many1</code> call to <code>value_pair</code> passing <code>false</code> for the <code>time</code> flag. Notice that we don't need a <code>map</code> here since no additional changes need to be made to match the <code>Output</code>.</p>
+<p>The last of the parsers we are going to define is <code>duration</code></p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn duration&lt;I&gt;() -&gt; impl Parser&lt;Input = I, Output = Duration&gt;
+where
+    I: Stream&lt;Item = char&gt;,
+    I::Error: ParseError&lt;I::Item, I::Range, I::Position&gt;,
+{
+    (
+        char('P'),
+        optional(date_part()),
+        optional(time_part()),
+    ).map(|(_, d, t)| {
+        let mut ret = Duration::new();
+        for part in d.unwrap_or(Vec::new()).iter().chain(t.unwrap_or(Vec::new()).iter()) {
+            match part {
+                DurationPart::Years(v) =&gt; ret.set_years(*v),
+                DurationPart::Months(v) =&gt; ret.set_months(*v),
+                DurationPart::Weeks(v) =&gt; ret.set_weeks(*v),
+                DurationPart::Days(v) =&gt; ret.set_days(*v),
+                DurationPart::Hours(v) =&gt; ret.set_hours(*v),
+                DurationPart::Minutes(v) =&gt; ret.set_minutes(*v),
+                DurationPart::Seconds(v) =&gt; ret.set_seconds(*v),
+            }
+        }
+        ret
+    })
+}
+#}</code></pre></pre>
+<p>This is another tuple indicating the sequence of a <code>char</code> of <code>P</code> followed by an <code>optional</code> <code>date_part</code> followed by an <code>optional</code> <code>time_part</code>. The argument to the <code>map</code> closure would be of type <code>(char, Option&lt;Vec&lt;DurationPart&gt;&gt;, Option&lt;Vec&lt;DurationPart&gt;&gt;)</code>. In the body we loop over those two <code>Vec</code>s if they exist, adding them to a <code>Duration</code> returning the result.</p>
+<p>Finally there is the <code>parse</code> function.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let d = duration().parse(s).map_err(|e| format!(&quot;{}&quot;, e))?;
+    Ok(d.0)
+}
+#}</code></pre></pre>
+<p>Which creates a <code>Duration</code> parser by calling <code>duration</code> and then passes a <code>&amp;str</code> to the <code>parse</code> method, this is one of the methods defined on the <code>Parser</code> trait. <code>Parse</code> returns a <code>Result</code> and in the <code>Ok</code> position we have a tuple, the first item has the same type as <code>Output</code> and the second is the remaining input to parse. For us the <code>Output</code> is going to be a <code>Duration</code> so we return <code>Ok(d.0)</code></p>
+<p>Here is the full source file for the <code>combine</code> parser.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -882,7 +1071,7 @@ where
 <a class="header" href="#pest" id="pest"><h1>Pest</h1></a>
 <a class="header" href="#overview-2" id="overview-2"><h2>Overview</h2></a>
 <!--web-only-->
-<p><code>pest</code> is a completely different approach from the other two options discussed here. Instead of building your own parser, you write out your grammar, in their format, and <code>pest</code> does all the building for you. Since it is designed to handle anything you throw at it you ultimately are sacrificing speed for convenience which can be a very valid sacrifice.</p>
+<p><code>pest</code> is a completely different approach from the other two options discussed here. Instead of building your own parser you write out your grammar, in their format, and <code>pest</code> does all the building for you. Since it is designed to handle anything you throw at it you ultimately are sacrificing speed for convenience which can be a very valid sacrifice.</p>
 <!--web-only-end-->
 <!--slides-only-->
 <ul>
@@ -892,7 +1081,7 @@ where
 <!--slides-only-end-->
 <a class="header" href="#positives-2" id="positives-2"><h2>Positives</h2></a>
 <!--web-only-->
-<p>The biggest advantage that <code>pest</code> has over the other options is the barrier to entry. The learning curve is pinned almost entirely learning to the standard grammar formats. If you don't already have this skill it is a pretty valuable one to have so the cost of that is nominal. Another perk of this system is that you might be able to find a similar grammar format published online somewhere. A good example of this is the es5 grammar I found when I was getting started with my parsers, you can see it <a href="http://boshi.inimino.org/3box/PanPG/grammars/ECMAScript_5.peg">here</a>. It won't fit exactly but often a simple find/replace can do almost all of the work for you. Lastly, you are off loading a large amount of the solution development to a tool, this makes it much faster to get up and running.</p>
+<p>The biggest advantage that <code>pest</code> has over the other options is the barrier to entry. The learning curve is pinned almost entirely learning to the grammar format. If you don't already have this skill it is a pretty valuable one to have so the cost of that is nominal. Another perk of this system is that you might be able to find a similar grammar format published online somewhere. A good example of this is the es5 grammar I found when I was getting started with my parsers, you can see it <a href="http://boshi.inimino.org/3box/PanPG/grammars/ECMAScript_5.peg">here</a>. It won't fit exactly but often a simple find/replace can do almost all of the work for you. Lastly, you are off loading a large amount of the solution development to a tool, this makes it much faster to get up and running.</p>
 <!--web-only-end-->
 <!--slides-only-->
 <ul>
@@ -919,7 +1108,161 @@ where
 <p>Before we start digging into the rust code, we should first cover the grammar file.</p>
 <p>It looks a lot like our BNF grammar, the biggest difference is that we have the opportunity to use some more flexible notation. For example the instead of having one rule for optional values and another for non-optional, we can use the <code>?</code> to say that any existing rule is optional. When noting that values repeat, we can use <code>+</code> to indicate 1 or more and the <code>*</code> to indicate 0 or more. These might be familiar to you if you have used regular expressions.</p>
 <p>Some other things to keep in mind when using the <code>pest</code> grammar syntax, the right hand side of a rule needs to be wrapped in curly braces and each segment should be separated with <code>~</code>. There are some more advanced things you can do with this style but we don't need them here.</p>
-<p>Starting from the bottom again, first we define our <code>decimal</code> rule, this is really just an alias for the <code>ASCII_DIGIT</code> rule provided by <code>pest</code>. Next we have <code>integer</code> which is 1 or more <code>decimal</code>s. Then remainder, a period followed by an integer, notice that strings need to be wrapped in double quotes. Now we can define our <code>number</code> rule as either an <code>integer</code> with an optional <code>remainder</code> or an optional <code>integer</code> followed by a <code>remainder</code>. Above that is all of our unit/value pairs followed by the <code>time_section</code> and <code>date_section</code> rules. All the way at the top we have the <code>Duration</code> rule.</p>
+<p>Starting from the bottom again, first we define our <code>Decimal</code> rule, this is really just an alias for the <code>ASCII_DIGIT</code> rule provided by <code>pest</code>.</p>
+<pre><code>Decimal = { ASCII_DIGIT }
+</code></pre>
+<p>Next we have <code>Integer</code> which is 1 or more <code>decimal</code>s.</p>
+<pre><code>Integer = { Decimal+ }
+</code></pre>
+<p>Then <code>Remainder</code>, a period followed by an integer, notice that strings need to be wrapped in double quotes.</p>
+<pre><code>Remainder = { &quot;.&quot; ~ Integer }
+</code></pre>
+<p>Now we can define our <code>Number</code> rule as either an <code>Integer</code> with an optional <code>Remainder</code> or an optional <code>Integer</code> followed by a <code>Remainder</code>.</p>
+<pre><code>Number = { (Integer ~ Remainder?) |
+           (Integer? ~ Remainder)
+}
+</code></pre>
+<p>Above that is all of our unit/value pairs.</p>
+<pre><code>Year = { Number ~ &quot;Y&quot; }
+Week = { Number ~ &quot;W&quot; }
+Day = { Number ~ &quot;D&quot; }
+Hour = { Number ~ &quot;H&quot; }
+MinuteOrMonth = { Number ~ &quot;M&quot; }
+Second = { Number ~ &quot;S&quot; }
+</code></pre>
+<p>Followed by the <code>time_section</code> and <code>date_section</code> rules.</p>
+<pre><code>DateSection = {
+    (Year? ~ MinuteOrMonth? ~ Week? ~ Day) |
+    (Year? ~ MinuteOrMonth? ~ Week ~ Day?) |
+    (Year? ~ MinuteOrMonth ~ Week? ~ Day?) |
+    (Year ~ MinuteOrMonth? ~ Week? ~ Day?)
+}
+TimeSection = { &quot;T&quot; ~ (
+    (Hour? ~ MinuteOrMonth? ~ Second) |
+    (Hour? ~ MinuteOrMonth ~ Second?) |
+    (Hour ~ MinuteOrMonth? ~ Second?)
+    )
+}
+</code></pre>
+<p>All the way at the top we have the <code>Duration</code> rule.</p>
+<pre><code>Duration = {
+    &quot;P&quot; ~ ((DateSection ~ TimeSection?) | (DateSection? ~ TimeSection))
+}
+</code></pre>
+<p>Now for the rust part, to start we are going to use a derive provided by pest for their trait <code>Parser</code>. The derive allows for an attribute <code>grammar</code> which should be assigned the relative plath to the grammar file. We apply these to a unit struct, I called mine <code>DurationParser</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Parser)]
+#[grammar = &quot;duration.pest&quot;]
+pub struct DurationParser;
+#}</code></pre></pre>
+<p>This will create an enum called <code>Rule</code> that will have one variant for each of the rules in our grammar file. Here it would look something like this.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+enum Rule {
+    Duration,
+    DateSection,
+    TimeSection,
+    Year,
+    Week,
+    Day,
+    MinuteOrMonth,
+    Second,
+    Number,
+    Remainder,
+    Integer,
+    Decimal,
+}
+#}</code></pre></pre>
+<p>Inside of the <code>parse</code> function, the first thing we do is call <code>DurationParser::parse</code>, providing the rule we are looking to parse, in this case <code>Rule::Duration</code> and the <code>&amp;str</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let duration = DurationParser::parse(Rule::Duration, s)
+                .map_err(|e| format!(&quot;{}&quot;, e))?
+                .next()
+                .unwrap();
+    let ret = assemble_parts(duration)?;
+    Ok(ret)
+}
+#}</code></pre></pre>
+<p>This is going to return a <code>Result</code> with a <code>Pairs</code> in the success position. <code>Pairs</code> is an <code>iterator</code> over <code>Pair</code>. For our case, we just need to first <code>Pair</code> so we can call <code>next</code> to get that. Once we have that we can pass it off to <code>assemble_parts</code>, which will take the <code>Pair</code> and pull out the inner rules. You can think about that in the same way our grammar is layed out, the <code>Duration</code> rule had <code>DateSection</code> and <code>TimeSection</code> in its definition, so the inner pairs would be one of these two variants of the <code>Rule</code> enum.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn assemble_parts(pair: Pair&lt;Rule&gt;) -&gt; Result&lt;Duration, String&gt; {
+    let mut ret = Duration::new();
+    for part in pair.into_inner() {
+        match part.as_rule() {
+            Rule::DateSection =&gt; {
+                assemble_part(&amp;mut ret, part, false)?;
+            },
+            Rule::TimeSection =&gt; {
+                assemble_part(&amp;mut ret, part, true)?;
+            },
+            _ =&gt; unreachable!()
+        }
+    }
+    Ok(ret)
+#}</code></pre></pre>
+<p>Once we have the inner values we are going to loop over them and pass it off to <code>assemble_part</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn assemble_part(d: &amp;mut Duration, pair: pest::iterators::Pair&lt;Rule&gt;, time: bool) -&gt; Result&lt;(), String&gt; {
+    for ref part in pair.into_inner() {
+        update_duration(d, part, time)?;
+    }
+    Ok(())
+}
+#}</code></pre></pre>
+<p>This is again going to pull out the inner <code>Pair</code> which should be one of the unit value rules. Once it has pulled that out it passes that pair off to <code>update_duration</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn update_duration(d: &amp;mut Duration, pair: &amp;Pair&lt;Rule&gt;, time: bool) -&gt; Result&lt;(), String&gt; {
+    let f = get_float(pair)?;
+    match pair.as_rule() {
+        Rule::Year =&gt; {
+            d.set_years(f);
+        },
+        Rule::MinuteOrMonth =&gt; {
+            if time {
+                //minute
+                d.set_minutes(f);
+            } else {
+                //month
+                d.set_months(f);
+            }
+        },
+        Rule::Week =&gt; {
+            d.set_weeks(f);
+        },
+        Rule::Day =&gt; {
+            d.set_days(f);
+        }
+        Rule::Hour =&gt; {
+            d.set_hours(f);
+        }
+        Rule::Second =&gt; {
+            d.set_seconds(f);
+        },
+        _ =&gt; unreachable!()
+    }
+    Ok(())
+}
+
+fn get_float(pair: &amp;Pair&lt;Rule&gt;) -&gt; Result&lt;f32, String&gt; {
+    let s = pair.as_str();
+    let s = &amp;s[..s.len() - 1];
+    s.parse().map_err(|e| format!(&quot;error parsing float: {:?} {}&quot;, s, e))
+}
+#}</code></pre></pre>
+<p>Here we are going to first get the float value from the pair, we do this by calling <code>as_str</code> on the <code>Pair</code> which gives the full slice of the original, we know the last character is the unit so we call <code>parse</code> on the sub string not including that. Now that we have the value, we can just match on the <code>Pair::as_rule</code> which will be one of our unit variants. At each stage we have passed down a mutable reference to the <code>Duration</code> we are assembling, making it easier to update it as needed. That is it, we off loaded quite a bit of the logic to the parser generator.</p>
+<p>Here are the full grammar and rust files.</p>
 <pre><code>
 Duration = {
     &quot;P&quot; ~ ((DateSection ~ TimeSection?) | (DateSection? ~ TimeSection))
@@ -949,27 +1292,6 @@ Remainder = { &quot;.&quot; ~ Integer }
 Integer = { Decimal+ }
 Decimal = { ASCII_DIGIT }
 </code></pre>
-<p>Now for the rust part, to start we are going to use a derive provided by pest for their trait <code>Parser</code>. The derive allows for an attribute <code>grammar</code> which should be assigned the relative plath to the grammar file. We apply these to a unit struct, I called my <code>DurationParser</code>. This will create an enum called <code>Rule</code> that will have one variant for each of the rules in our grammar file. For us this would look something like this.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-enum Rule {
-    Duration,
-    DateSection,
-    TimeSection,
-    Year,
-    Week,
-    Day,
-    MinuteOrMonth,
-    Second,
-    Number,
-    Remainder,
-    Integer,
-    Decimal,
-}
-#}</code></pre></pre>
-<p>Inside of the <code>parse</code> function, the first thing we do is call <code>DurationParser::parse</code>, providing the rule we are looking to parse, in this case <code>Rule::Duration</code> and the <code>&amp;str</code>. This is going to return a <code>Result</code> with a <code>Pairs</code> in the success position. <code>Pairs</code> is an <code>iterator</code> over <code>Pair</code>. For our case, we just need to first <code>Pair</code> so we can call <code>next</code> to get that. Once we have that we can pass it off to <code>assemble_parts</code>, which will take the <code>Pair</code> and pull out the inner rules. You can think about that in the same way our grammar is layed out, the <code>Duration</code> rule had <code>DateSection</code> and <code>TimeSection</code> in its definition, so the inner pairs would be one of these two variants of the <code>Rule</code> enum.</p>
-<p>Once we have the inner values we are going to loop over them and pass it off to <code>assemble_part</code>. This is again going to pull out the inner <code>Pair</code> which should be one of the unit value rules. Once it has pulled that out it passes that pair off to <code>update_duration</code>. Here we are going to first get the float value from the pair, we do this by calling <code>as_str</code> on the <code>Pair</code> which gives the full slice of the original, we know the last character is the unit wo we call <code>parse</code> on the sub string not including that. Now that we have the value, we can just match on the <code>Pair::as_rule</code> which will be one of our unit variants. At each stage we have passed down a mutable reference to the <code>Duration</code> we are assembling, making it easier to update it as needed. That is it, we off loaded quite a bit of the logic to the parser generator.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -1099,7 +1421,7 @@ mod test {
 <!--slides-only-end-->
 <a class="header" href="#negatives-3" id="negatives-3"><h2>Negatives</h2></a>
 <!--web-only-->
-<p>The biggest negative is that you are going to, at least to some extent, re-invent the wheel. The maintainers of the three crates I have covered are focusing their energy on building a quality base for you to build on, if you built that base yourself would it be as solid? The other big issue with the DIY approach is that you are going to introduce a significant amount of complexity to your solution and complexity is synonym for risk in most cases.</p>
+<p>The biggest negative is that you are going to, at least to some extent, re-invent the wheel. The maintainers of the three crates I have covered are focusing their energy on building a quality base for you to build on, if you built that base yourself would it be as solid? The other big issue with the DIY approach is that you are going to introduce a significant amount of complexity to your solution and complexity is often a synonym for risk.</p>
 <!--web-only-end-->
 <!--slides-only-->
 <ul>
@@ -1239,7 +1561,7 @@ mod test {
 <a class="header" href="#performance" id="performance"><h1>Performance</h1></a>
 <!--web-only-->
 <p>Below you will find a table of benchmark information for each of the 4
-implementations. There are two benchmarks for each implementation, the first is parsing just 1 duration, the second is parsing 1000 durations. For the <a href="#build-time">build time</a> and <a href="#build-size">build size</a> benchmarks, I used the following binary application with feature flags to conditionally use each of the implementations.</p>
+implementations. There are two benchmarks for each implementation, the first is parsing just 1 duration, the second is parsing 1000 durations, these are all created using <code>lazy_static</code> so each parser is provided the same input. For the <a href="#build-time">build time</a> and <a href="#build-size">build size</a> benchmarks, I used the following binary application with feature flags to conditionally use each of the implementations.</p>
 <pre><pre class="playpen"><code class="language-rust">extern crate duration;
 extern crate random_durations;
 #[cfg(all(feature = &quot;nom&quot;, not(feature = &quot;bench&quot;)))]
@@ -1289,6 +1611,95 @@ fn get_count() -&gt; usize {
 <p>This is the time <code>cargo +nightly bench</code> reported for this parser to parse 1 duration.</p>
 <a class="header" href="#parse-1000" id="parse-1000"><h3>Parse 1000</h3></a>
 <p>This is the time <code>cargo +nightly bench</code> reported for this parser to parse 1000 durations.</p>
+<a class="header" href="#benches" id="benches"><h3>Benches</h3></a>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(test)]
+
+#fn main() {
+extern crate test;
+extern crate duration;
+extern crate random_durations;
+#[cfg(feature = &quot;nom&quot;)]
+extern crate nom_duration_parser;
+#[cfg(feature = &quot;pest&quot;)]
+extern crate pest_duration_parser;
+#[cfg(feature = &quot;combine&quot;)]
+extern crate combine_duration_parser;
+#[cfg(feature = &quot;hand&quot;)]
+extern crate hand_rolled_duration_parser;
+#[macro_use]
+extern crate lazy_static;
+
+use test::{Bencher, black_box};
+use duration::Duration;
+
+lazy_static! {
+    static ref DURATION: String = format!(&quot;{}&quot;, random_durations::gen_random_dur());
+}
+
+lazy_static! {
+    static ref DURATIONS: Vec&lt;String&gt; = random_durations::gen_random_durs_text(1000);
+}
+
+#[cfg(feature = &quot;nom&quot;)]
+#[bench]
+fn nom(b: &amp;mut Bencher) {
+    single(b, &amp;nom_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;nom&quot;)]
+#[bench]
+fn nom_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;nom_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;pest&quot;)]
+#[bench]
+fn pest(b: &amp;mut Bencher) {
+    single(b, &amp;pest_duration_parser::parse);
+}
+#[cfg(feature = &quot;pest&quot;)]
+#[bench]
+fn pest_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;pest_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;combine&quot;)]
+#[bench]
+fn combine(b: &amp;mut Bencher) {
+    single(b, &amp;combine_duration_parser::parse);
+}
+#[cfg(feature = &quot;combine&quot;)]
+#[bench]
+fn combine_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;combine_duration_parser::parse);
+}
+
+#[cfg(feature = &quot;hand&quot;)]
+#[bench]
+fn hand_rolled(b: &amp;mut Bencher) {
+    single(b, &amp;hand_rolled_duration_parser::parse);
+}
+#[cfg(feature = &quot;hand&quot;)]
+#[bench]
+fn hand_rolled_1000(b: &amp;mut Bencher) {
+    thousand(b, &amp;hand_rolled_duration_parser::parse);
+}
+fn single(b: &amp;mut Bencher, f: &amp;impl Fn(&amp;str) -&gt; Result&lt;Duration, String&gt;) {
+    b.iter(|| {
+        black_box(f(&amp;DURATION).unwrap());
+    });
+}
+
+fn thousand(b: &amp;mut Bencher, f: &amp;impl Fn(&amp;str) -&gt; Result&lt;Duration, String&gt;) {
+    b.iter(|| {
+        for s in DURATIONS.iter() {
+            black_box(f(s).unwrap());
+        }
+    })
+}
+#}</code></pre></pre>
 <!--web-only-end-->
 <table><thead><tr><th>crate       </th><th> parse 1 (+/-)      </th><th> parse 1000 (+/-)   </th><th> build time </th><th> release size</th></tr></thead><tbody>
 <tr><td>nom         </td><td> 363.00ns (10.00ns) </td><td> 844.53ms (64.04ms) </td><td> 6.98s      </td><td> 727.08 kb   </td></tr>
@@ -1300,7 +1711,7 @@ fn get_count() -&gt; usize {
 </style>
 <a class="header" href="#combine-revisited" id="combine-revisited"><h1>Combine (revisited)</h1></a>
 <!--web-only-->
-<p>I wanted to revisit <code>combine</code>, while the original works, I was able to create an implementation that is actually faster than <code>nom</code>'s. Doing so required quite a bit of additional work in understanding how the &quot;zero-copy&quot; tools in <code>combine</code> work. With the following implementation the <code>combine</code> parser, the whole set of benchmarks are:</p>
+<p>I wanted to revisit <code>combine</code>, while the original works, I was able to create an implementation that is actually faster than <code>nom</code>'s. Doing so required quite a bit of additional work in understanding how the &quot;zero-copy&quot; tools in <code>combine</code> work. In truth I still haven't been able to figure out how the type annotations need to be set for this implementation to work, instead each parser is assigned to a variable inside of a function body. With the following implementation the <code>combine</code> parser, the whole set of benchmarks are:</p>
 <!--web-only-end-->
 <!--slides-only-->
 <ul>
@@ -1314,6 +1725,86 @@ fn get_count() -&gt; usize {
 <tr><td> pest        </td><td> 3.66ms (342.00ns)  </td><td> 3.89s (279.92ms)   </td><td> 31.31s     </td><td> 767.86 kb </td></tr>
 <tr><td> hand_rolled </td><td> 694.00ns (93.00ns) </td><td> 551.86ms (77.66ms) </td><td> 10.81s     </td><td> 718.87 kb </td></tr>
 </tbody></table>
+<!--web-only-->
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+extern crate duration;
+use duration::{Duration, DurationPart};
+extern crate combine;
+use combine::{
+    optional,
+    Parser,
+    range::recognize,
+    parser::{
+        item::item,
+        byte::digit,
+        repeat::{
+            skip_many,
+            skip_many1
+        },
+        repeat::skip_count,
+    },
+    error::UnexpectedParse,
+};
+pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
+    let value = || {
+        recognize((
+            skip_many1(digit()),
+            optional((
+                item(b'.'),
+                skip_many(digit())
+            )),
+        ))
+        .and_then(|bs: &amp;[u8]| {
+            let s = ::std::str::from_utf8(bs).map_err(|_| UnexpectedParse::Unexpected)?;
+            s.parse::&lt;f32&gt;().map_err(|_| UnexpectedParse::Unexpected)
+        })
+    };
+    let pair = |time: bool| {
+        (
+            value(),
+            combine::parser::item::any()
+        ).and_then(move |(v, c): (f32, u8)| {
+            let part = match c {
+                b'Y' =&gt; DurationPart::Years(v),
+                b'M' =&gt; if time {
+                    DurationPart::Minutes(v)
+                } else {
+                    DurationPart::Months(v)
+                },
+                b'W' =&gt; DurationPart::Weeks(v),
+                b'D' =&gt; DurationPart::Days(v),
+                b'H' =&gt; DurationPart::Hours(v),
+                b'S' =&gt; DurationPart::Seconds(v),
+                _ =&gt; return Err(UnexpectedParse::Unexpected)
+            };
+            Ok(part)
+        })
+    };
+    let date_part = combine::count(4, pair(false)).map(|p: Vec&lt;DurationPart&gt;| p);
+    let time_part = skip_count(1, item(b'T')).and(combine::count(3, pair(true))).map(|(_, p): (_, Vec&lt;DurationPart&gt;)| p);
+    let mut duration = skip_count(1, item(b'P')).and(date_part).and(time_part).map(|((_, d), t): ((_, std::vec::Vec&lt;DurationPart&gt;), std::vec::Vec&lt;DurationPart&gt;)| (d, t));
+    let ((date_parts, time_parts), rem): ((Vec&lt;DurationPart&gt;, Vec&lt;DurationPart&gt;), &amp;[u8]) = duration.parse(s.as_bytes()).map_err(|e| format!(&quot;{}&quot;, e))?;
+    if rem.len() &gt; 0 {
+        return Err(format!(&quot;did not parse full string provided {}&quot;, String::from_utf8_lossy(rem)));
+    }
+    let mut ret = Duration::new();
+    for part in date_parts.iter().chain(time_parts.iter()) {
+        match part {
+            DurationPart::Years(v) =&gt; ret.set_years(*v),
+            DurationPart::Months(v) =&gt; ret.set_months(*v),
+            DurationPart::Weeks(v) =&gt; ret.set_weeks(*v),
+            DurationPart::Days(v) =&gt; ret.set_days(*v),
+            DurationPart::Hours(v) =&gt; ret.set_hours(*v),
+            DurationPart::Minutes(v) =&gt; ret.set_minutes(*v),
+            DurationPart::Seconds(v) =&gt; ret.set_seconds(*v),
+        }
+    }
+    Ok(ret)
+}
+#}</code></pre></pre>
+<!--web-only-end-->
 <script>var PresentationMode;!function(e){e[e.Slides=0]="Slides",e[e.Web=1]="Web"}(PresentationMode||(PresentationMode={}));var PresentationModeHider=function(){function e(){var t=this;(this.queryKey="presentation_mode",this.webClass="article-content",this.preClass="presentation-only",this.mode=this.getMode(),this.setMode(),this.assignClassesViaComments(),this.mode!==PresentationMode.Slides||""!==location.pathname&&"/"!==location.pathname)||document.querySelector(".sidebar > .chapter").firstChild.firstChild.click();window.addEventListener("keyup",function(e){e.altKey&&("p"!=e.key&&"P"!=e.key&&"KeyP"!=e.code||t.toggle())})}return e.prototype.assignClassesViaComments=function(){for(var e,t=document.createNodeIterator(document.body,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_COMMENT,null),n=this.mode===PresentationMode.Web?"not-presenting":"presenting",o=null;e=t.nextNode();)if(8===e.nodeType){var s=e.nodeValue.trim();o="web-only"===s?this.webClass:"slides-only"===s?this.preClass:null}else 1===e.nodeType&&null!==o&&e.classList.add(o,n)},e.prototype.getMode=function(){var t=localStorage.getItem(this.queryKey);if(null===t)return PresentationMode.Web;try{var e=parseInt(t);return 1<e||e<0?(console.error("presentation_mode was out of range",e),PresentationMode.Web):e}catch(e){return console.error("presentation_mode present in localStorage but value is not an integer",t,e),PresentationMode.Web}},e.prototype.setMode=function(){localStorage.setItem(this.queryKey,this.mode.toString())},e.prototype.updatePage=function(){this.updateElements(document.querySelectorAll(".presentation-only")),this.updateElements(document.querySelectorAll(".article-content"))},e.prototype.updateElements=function(e){for(var t=0;t<e.length;t++){var n=e[t];this.mode===PresentationMode.Slides?n.classList.replace("not-presenting","presenting"):n.classList.replace("presenting","not-presenting")}},e.prototype.toggle=function(){switch(this.mode){case PresentationMode.Slides:this.mode=PresentationMode.Web;break;case PresentationMode.Web:this.mode=PresentationMode.Slides}this.setMode(),this.updatePage()},e}(),___presentationModeHider=new PresentationModeHider;</script><style>.presentation-only.not-presenting{display:none}.article-content.presenting{display:none}
 </style>
 <!--web-only-->
@@ -1339,14 +1830,19 @@ use combine::{
     error::UnexpectedParse,
 };
 pub fn parse(s: &amp;str) -&gt; Result&lt;Duration, String&gt; {
-    let value = || {recognize((
-        skip_many1(digit()),
-        optional((item(b'.'), skip_many(digit()))),
-    ))
-    .and_then(|bs: &amp;[u8]| {
-        let s = ::std::str::from_utf8(bs).map_err(|_| UnexpectedParse::Unexpected)?;
-        s.parse::&lt;f32&gt;().map_err(|_| UnexpectedParse::Unexpected)
-    })};
+    let value = || {
+        recognize((
+            skip_many1(digit()),
+            optional((
+                item(b'.'),
+                skip_many(digit())
+            )),
+        ))
+        .and_then(|bs: &amp;[u8]| {
+            let s = ::std::str::from_utf8(bs).map_err(|_| UnexpectedParse::Unexpected)?;
+            s.parse::&lt;f32&gt;().map_err(|_| UnexpectedParse::Unexpected)
+        })
+    };
     let pair = |time: bool| {
         (
             value(),

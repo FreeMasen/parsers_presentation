@@ -4,18 +4,6 @@ Before we dig into each implementation, I want to cover a few things that are co
 to most of the examples. The first thing they share is the following enum.
 $web-only-end$
 ```rust
-pub struct Duration {
-    years: Option<f32>,
-    months: Option<f32>,
-    weeks: Option<f32>,
-    days: Option<f32>,
-    hours: Option<f32>,
-    minutes: Option<f32>,
-    seconds: Option<f32>,
-}
-```
-
-```rust
 enum DurationPart {
     Years(f32),
     Months(f32),
@@ -27,8 +15,22 @@ enum DurationPart {
 }
 ```
 $web-only$
-This will represent a successfully parsed number/unit pair. so `100Y` would translate to `DurationPart::Years(100.0)`
-
+This is going to be how we represent each of the parts of a duration as we
+are parsing the input. Once parsing is done we will combine them into
+a full representation of a duration.
+$web-only-end$
+```rust
+pub struct Duration {
+    years: Option<f32>,
+    months: Option<f32>,
+    weeks: Option<f32>,
+    days: Option<f32>,
+    hours: Option<f32>,
+    minutes: Option<f32>,
+    seconds: Option<f32>,
+}
+```
+$web-only$
 The next thing that pops up across multiple crates is the need to parse a string into a float.
 
 > quick note:, the values are not actual floating point numbers as the spec does not allow for scientific notation (`1.2e-3`), they would be more akin to the decimal data type provided in some languages.
@@ -43,8 +45,6 @@ let value: f32 = value_str.parse();
 
 $web-only$
 Here the `parse` method on `&str` returns a result, so we would need to deal with that as well.
-$web-only-end$
 
-$web-only$
 The last thing to cover here is that each parser will need to deal with the fact that `M` can mean either month or minute. While there isn't a shared code solution for this, it does pop up a few times.
 $web-only-end$
